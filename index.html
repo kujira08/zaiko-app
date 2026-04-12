@@ -2705,6 +2705,7 @@ window.qrcode = qrcode;
         padding: 0 10px 10px; text-align: right;
       }
       #mov-body .td-hide-mobile { display: none !important; }
+      .td-show-mobile { display: block !important; }
       /* bulk detail は横スクロール維持 */
       #mov-body tr[id^="bulk-detail"] td { display: table-cell !important; padding: 0; }
     }
@@ -3333,6 +3334,7 @@ function startApp() {
           <option value="染料">染料</option>
           <option value="生地">生地</option>
           <option value="その他">その他</option>
+          <option value="既製品">既製品</option>
         </select>
         <button class="btn btn-outline" onclick="openMatImportModal()">📂 一括インポート</button>
         <button class="btn btn-primary" onclick="openMaterialModal()">＋ 追加</button>
@@ -3342,6 +3344,7 @@ function startApp() {
       <button class="inner-tab active" data-mat="染料" onclick="switchMatTab('染料')">🧪 染料</button>
       <button class="inner-tab" data-mat="生地" onclick="switchMatTab('生地')">🎨 生地</button>
       <button class="inner-tab" data-mat="その他" onclick="switchMatTab('その他')">📦 その他</button>
+      <button class="inner-tab" data-mat="既製品" onclick="switchMatTab('既製品')">🛍️ 既製品</button>
     </div>
     <div id="mat-content"></div>
   </div>
@@ -4625,7 +4628,7 @@ function renderProducts() {
           ${thumb}
           <div>
             <div style="font-weight:600">${low?'⚠️ ':''}${p.name}</div>
-            ${p.sku ? `<div style="font-size:.75rem;color:#a0aec0">${p.sku}</div>` : ''}
+            <div style="font-size:.75rem;color:#718096;margin-top:1px">${p.sku||'-'} &nbsp;|&nbsp; ${yen(p.price||0)}</div>
             ${p.supplier ? `<div style="font-size:.72rem;color:#718096">🏭 ${p.supplier}</div>` : ''}
             ${p.category ? `<span style="display:inline-block;font-size:.7rem;background:#e9d8fd;color:#553c9a;border-radius:4px;padding:1px 6px;margin-top:2px;cursor:pointer" onclick="selectCatFilter('${p.category.replace(/'/g,"\\'")}');renderProducts()">${p.category}</span>` : ''}
             <div style="font-size:.7rem;color:#a0aec0">📅 ${lastDate || '履歴なし'}</div>
@@ -4779,8 +4782,8 @@ function renderMaterials() {
   const container = document.getElementById('mat-content');
 
   if (mats.length === 0) {
-    const labels = { '染料': '染料', '生地': '生地', 'その他': 'その他' };
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">${currentMatType==='染料'?'🧪':currentMatType==='生地'?'🎨':'📦'}</div><p>${labels[currentMatType]}が登録されていません</p></div>`;
+    const icons = { '染料':'🧪', '生地':'🎨', 'その他':'📦', '既製品':'🛍️' };
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">${icons[currentMatType]||'📦'}</div><p>${currentMatType}が登録されていません</p></div>`;
     return;
   }
 
@@ -4828,17 +4831,42 @@ function renderMaterials() {
         </tr>`;
       }).join('')}</tbody>
     </table></div></div>`;
-  } else {
+  } else if (currentMatType === '既製品') {
     container.innerHTML = `<div class="card"><div class="table-wrap"><table>
-      <thead><tr><th>品名</th><th>SKU</th><th>在庫</th><th>単価</th><th>在庫金額</th><th>操作</th></tr></thead>
+      <thead><tr><th>品名</th><th class="td-hide-mobile">SKU</th><th>在庫</th><th class="td-hide-mobile">単価</th><th class="td-hide-mobile">小売単価</th><th class="td-hide-mobile">在庫金額</th><th>操作</th></tr></thead>
       <tbody>${mats.map(m => {
         const val = (m.stock||0) * (m.price||0);
         return `<tr>
-          <td style="font-weight:600">${m.name}</td>
-          <td style="font-size:0.78rem;color:#718096">${m.sku||'-'}</td>
+          <td style="font-weight:600">
+            ${m.name}
+            <div style="font-size:.75rem;color:#718096;margin-top:1px" class="td-show-mobile">${m.sku||'-'} | ${yen(m.price||0)}</div>
+          </td>
+          <td class="td-hide-mobile" style="font-size:0.78rem;color:#718096">${m.sku||'-'}</td>
+          <td><strong>${m.stock||0} ${m.unit||'個'}</strong></td>
+          <td class="td-hide-mobile">${yen(m.price||0)}</td>
+          <td class="td-hide-mobile">${m.sellingPrice ? yen(m.sellingPrice) : '-'}</td>
+          <td class="td-hide-mobile" style="font-weight:700;color:#1a365d">${yen(val)}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-gray btn-sm" onclick="openMaterialModal('${m.id}')">編集</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteMaterial('${m.id}')">削除</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div></div>`;
+  } else {
+    container.innerHTML = `<div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>品名</th><th class="td-hide-mobile">SKU</th><th>在庫</th><th class="td-hide-mobile">単価</th><th class="td-hide-mobile">在庫金額</th><th>操作</th></tr></thead>
+      <tbody>${mats.map(m => {
+        const val = (m.stock||0) * (m.price||0);
+        return `<tr>
+          <td style="font-weight:600">
+            ${m.name}
+            <div style="font-size:.75rem;color:#718096;margin-top:1px" class="td-show-mobile">${m.sku||'-'} | ${yen(m.price||0)}/${m.unit||'個'}</div>
+          </td>
+          <td class="td-hide-mobile" style="font-size:0.78rem;color:#718096">${m.sku||'-'}</td>
           <td><strong>${m.stock||0} ${m.unit}</strong></td>
-          <td>${yen(m.price||0)}/${m.unit}</td>
-          <td style="font-weight:700;color:#1a365d">${yen(val)}</td>
+          <td class="td-hide-mobile">${yen(m.price||0)}/${m.unit}</td>
+          <td class="td-hide-mobile" style="font-weight:700;color:#1a365d">${yen(val)}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-gray btn-sm" onclick="openMaterialModal('${m.id}')">編集</button>
             <button class="btn btn-danger btn-sm" onclick="deleteMaterial('${m.id}')">削除</button>
@@ -4863,7 +4891,7 @@ function openMaterialModal(id) {
   // フィールド表示切り替え
   document.getElementById('dye-fields').style.display = type === '染料' ? '' : 'none';
   document.getElementById('fabric-fields').style.display = type === '生地' ? '' : 'none';
-  document.getElementById('other-fields').style.display = type === 'その他' ? '' : 'none';
+  document.getElementById('other-fields').style.display = (type === 'その他' || type === '既製品') ? '' : 'none';
 
   // デフォルト値リセット
   document.getElementById('m-dye-kind').value = '反応染料';
@@ -4903,6 +4931,9 @@ function openMaterialModal(id) {
       document.getElementById('m-oth-unit').value = m.unit || '個';
       document.getElementById('m-oth-price').value = m.price || 0;
       document.getElementById('m-oth-stock').value = m.stock || 0;
+      if (type === '既製品' && document.getElementById('m-oth-selling')) {
+        document.getElementById('m-oth-selling').value = m.sellingPrice || 0;
+      }
     }
   }
   openModal('modal-material');
