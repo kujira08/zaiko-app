@@ -2629,6 +2629,7 @@ window.qrcode = qrcode;
        モバイル最適化
     ================================================ */
     .td-meta-mobile { display: none; }
+    .td-show-mobile { display: none; }
 
     @media (max-width: 620px) {
       /* iOS zoom防止（最重要） */
@@ -2705,7 +2706,9 @@ window.qrcode = qrcode;
         padding: 0 10px 10px; text-align: right;
       }
       #mov-body .td-hide-mobile { display: none !important; }
+      .td-hide-mobile { display: none !important; }
       .td-show-mobile { display: block !important; }
+      .inv-btn-mobile { min-width: 60px; padding: 10px 14px !important; font-size: 0.95rem !important; }
       /* bulk detail は横スクロール維持 */
       #mov-body tr[id^="bulk-detail"] td { display: table-cell !important; padding: 0; }
     }
@@ -5719,13 +5722,19 @@ function renderInvCurrent() {
     }
     const m4cat = item.itemType === 'dye' ? d.materials.find(x => x.id === item.itemId) : null;
     const cat = item.itemType === 'dye' ? (m4cat?.dyeKind || '染料') : {product:'商品',fabric:'生地',other:'その他'}[item.itemType]||'';
+    const inputted = item.actVal !== null;
     return `<tr>
-      <td style="font-weight:600">${name}<br><small style="color:#718096;font-weight:400">${cat}</small></td>
-      <td style="font-size:0.82rem">${sysDisp}</td>
-      <td style="font-size:0.82rem">${actDisp || '<span style="color:#a0aec0">未入力</span>'}</td>
-      <td>${diffHtml || '<span style="color:#a0aec0">-</span>'}</td>
-      <td style="font-size:0.82rem;font-weight:600;color:#276749">${actAmount || '<span style="color:#a0aec0">-</span>'}</td>
-      <td><button class="btn btn-gray btn-sm" onclick="openInvInput('${check.id}',${idx})">入力</button></td>
+      <td style="font-weight:600">${name}<br><small style="color:#718096;font-weight:400">${cat}</small>
+        <div class="td-show-mobile" style="font-size:0.75rem;color:#4a5568;margin-top:2px">
+          ${sysDisp ? `帳簿: ${sysDisp}` : ''}${actDisp && actDisp !== '-' ? ` / 実: ${actDisp}` : ''}
+          ${diffHtml ? ` ${diffHtml}` : ''}
+        </div>
+      </td>
+      <td class="td-hide-mobile" style="font-size:0.82rem">${sysDisp}</td>
+      <td class="td-hide-mobile" style="font-size:0.82rem">${actDisp || '<span style="color:#a0aec0">未入力</span>'}</td>
+      <td class="td-hide-mobile">${diffHtml || '<span style="color:#a0aec0">-</span>'}</td>
+      <td class="td-hide-mobile" style="font-size:0.82rem;font-weight:600;color:#276749">${actAmount || '<span style="color:#a0aec0">-</span>'}</td>
+      <td><button class="btn ${inputted?'btn-gray':'btn-primary'} btn-sm inv-btn-mobile" onclick="openInvInput('${check.id}',${idx})">${inputted?'修正':'入力'}</button></td>
     </tr>`;
   }
 
@@ -5761,7 +5770,7 @@ function renderInvCurrent() {
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>品名</th><th>帳簿在庫</th><th>実在庫</th><th>差異</th><th>金額</th><th>入力</th></tr></thead>
+        <thead><tr><th>品名</th><th class="td-hide-mobile">帳簿在庫</th><th class="td-hide-mobile">実在庫</th><th class="td-hide-mobile">差異</th><th class="td-hide-mobile">金額</th><th>入力</th></tr></thead>
         <tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:#a0aec0;padding:20px">このカテゴリーの項目はありません</td></tr>'}</tbody>
       </table></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
