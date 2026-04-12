@@ -4793,20 +4793,22 @@ function renderMaterials() {
   if (currentMatType === '染料') {
     const kindColors = { '反応染料':'#e9d8fd', '直接染料':'#bee3f8', '顔料':'#fefcbf', '助剤':'#c6f6d5', 'その他':'#e2e8f0' };
     container.innerHTML = `<div class="card"><div class="table-wrap"><table>
-      <thead><tr><th>種類</th><th>品名</th><th>SKU</th><th>現在重量</th><th>正味重量</th><th>単価/kg</th><th>在庫金額</th><th>操作</th></tr></thead>
+      <thead><tr><th>品名</th><th class="td-hide-mobile">SKU</th><th class="td-hide-mobile">現在重量</th><th>正味重量</th><th class="td-hide-mobile">単価/kg</th><th class="td-hide-mobile">在庫金額</th><th>操作</th></tr></thead>
       <tbody>${mats.map(m => {
         const net = Math.max(0, (m.weightKg||0) - (m.tareKg||0));
         const val = net * (m.pricePerKg||0);
         const kind = m.dyeKind || 'その他';
         const badgeColor = kindColors[kind] || '#e2e8f0';
         return `<tr>
-          <td><span style="background:${badgeColor};padding:2px 8px;border-radius:10px;font-size:0.78rem;white-space:nowrap">${kind}</span></td>
-          <td style="font-weight:600">${m.name}</td>
-          <td style="font-size:0.78rem;color:#718096">${m.sku||'-'}</td>
-          <td>${fmt(m.weightKg||0,3)} kg</td>
+          <td style="font-weight:600">
+            <span style="background:${badgeColor};padding:1px 6px;border-radius:8px;font-size:0.72rem;margin-right:4px">${kind}</span>${m.name}
+            <div class="td-show-mobile" style="font-size:.75rem;color:#718096;margin-top:2px">${m.sku||'-'} | ${yen(m.pricePerKg||0)}/kg</div>
+          </td>
+          <td class="td-hide-mobile" style="font-size:0.78rem;color:#718096">${m.sku||'-'}</td>
+          <td class="td-hide-mobile">${fmt(m.weightKg||0,3)} kg</td>
           <td><strong>${fmt(net,3)} kg</strong></td>
-          <td>${yen(m.pricePerKg||0)}/kg</td>
-          <td style="font-weight:700;color:#1a365d">${yen(val)}</td>
+          <td class="td-hide-mobile">${yen(m.pricePerKg||0)}/kg</td>
+          <td class="td-hide-mobile" style="font-weight:700;color:#1a365d">${yen(val)}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-gray btn-sm" onclick="openMaterialModal('${m.id}')">編集</button>
             <button class="btn btn-danger btn-sm" onclick="deleteMaterial('${m.id}')">削除</button>
@@ -4816,17 +4818,20 @@ function renderMaterials() {
     </table></div></div>`;
   } else if (currentMatType === '生地') {
     container.innerHTML = `<div class="card"><div class="table-wrap"><table>
-      <thead><tr><th>品名</th><th>SKU</th><th>外径(mm)</th><th>残り長さ</th><th>単価/m</th><th>在庫金額</th><th>操作</th></tr></thead>
+      <thead><tr><th>品名</th><th class="td-hide-mobile">SKU</th><th class="td-hide-mobile">外径(mm)</th><th>残り長さ</th><th class="td-hide-mobile">単価/m</th><th class="td-hide-mobile">在庫金額</th><th>操作</th></tr></thead>
       <tbody>${mats.map(m => {
         const meters = calcFabricMeters(m.diamMm||0, m.coreMm||76, m.thickMm||0.5);
         const val = meters * (m.pricePerM||0);
         return `<tr>
-          <td style="font-weight:600">${m.name}</td>
-          <td style="font-size:0.78rem;color:#718096">${m.sku||'-'}</td>
-          <td>${fmt(m.diamMm||0,1)} mm</td>
+          <td style="font-weight:600">
+            ${m.name}
+            <div class="td-show-mobile" style="font-size:.75rem;color:#718096;margin-top:2px">${m.sku||'-'} | ${yen(m.pricePerM||0)}/m</div>
+          </td>
+          <td class="td-hide-mobile" style="font-size:0.78rem;color:#718096">${m.sku||'-'}</td>
+          <td class="td-hide-mobile">${fmt(m.diamMm||0,1)} mm</td>
           <td><strong>${fmt(meters,2)} m</strong></td>
-          <td>${yen(m.pricePerM||0)}/m</td>
-          <td style="font-weight:700;color:#1a365d">${yen(val)}</td>
+          <td class="td-hide-mobile">${yen(m.pricePerM||0)}/m</td>
+          <td class="td-hide-mobile" style="font-weight:700;color:#1a365d">${yen(val)}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-gray btn-sm" onclick="openMaterialModal('${m.id}')">編集</button>
             <button class="btn btn-danger btn-sm" onclick="deleteMaterial('${m.id}')">削除</button>
