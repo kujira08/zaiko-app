@@ -4649,7 +4649,7 @@ function renderProducts() {
           ${thumb}
           <div>
             <div style="font-weight:600">${low?'⚠️ ':''}${p.name}</div>
-            <div style="font-size:.75rem;color:#718096;margin-top:1px">${p.sku||'-'} &nbsp;|&nbsp; ${yen(p.sellingPrice||p.price||0)}</div>
+            <div style="font-size:.75rem;color:#718096;margin-top:1px">${p.sku||'-'} &nbsp;|&nbsp; 売:${yen(p.sellingPrice||p.price||0)}${p.sellingPrice ? ` 仕:${yen(p.price||0)}` : ''}</div>
             ${p.supplier ? `<div style="font-size:.72rem;color:#718096">🏭 ${p.supplier}</div>` : ''}
             ${p.category ? `<span style="display:inline-block;font-size:.7rem;background:#e9d8fd;color:#553c9a;border-radius:4px;padding:1px 6px;margin-top:2px;cursor:pointer" onclick="selectCatFilter('${p.category.replace(/'/g,"\\'")}');renderProducts()">${p.category}</span>` : ''}
             <div style="font-size:.7rem;color:#a0aec0">📅 ${lastDate || '履歴なし'}</div>
@@ -4662,7 +4662,7 @@ function renderProducts() {
           <strong>${p.stock||0}</strong>
           <div class="stock-bar"><div class="stock-bar-fill ${barCls}" style="width:${Math.round(ratio*100)}%"></div></div>
         </div>
-        <div class="td-meta-mobile">最低: ${p.min||5} &nbsp;|&nbsp; ${p.unit} &nbsp;|&nbsp; ${yen(p.sellingPrice||p.price||0)}</div>
+        <div class="td-meta-mobile">最低: ${p.min||5} &nbsp;|&nbsp; ${p.unit} &nbsp;|&nbsp; 売:${yen(p.sellingPrice||p.price||0)}${p.sellingPrice ? ` 仕:${yen(p.price||0)}` : ''}</div>
         ${consignBadges ? `<div style="margin-top:3px">${consignBadges}</div>` : ''}
       </td>
       <td class="td-hide-mobile">${p.min||5}</td>
