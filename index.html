@@ -4662,7 +4662,7 @@ function renderProducts() {
           <strong>${p.stock||0}</strong>
           <div class="stock-bar"><div class="stock-bar-fill ${barCls}" style="width:${Math.round(ratio*100)}%"></div></div>
         </div>
-        <div class="td-meta-mobile">最低: ${p.min||5} &nbsp;|&nbsp; ${p.unit} &nbsp;|&nbsp; 売:${yen(p.sellingPrice||p.price||0)}${p.sellingPrice ? ` 仕:${yen(p.price||0)}` : ''}</div>
+        <div class="td-meta-mobile">最低: ${p.min||5} &nbsp;|&nbsp; ${p.unit}</div>
         ${consignBadges ? `<div style="margin-top:3px">${consignBadges}</div>` : ''}
       </td>
       <td class="td-hide-mobile">${p.min||5}</td>
