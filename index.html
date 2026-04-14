@@ -2425,7 +2425,7 @@ window.qrcode = qrcode;
     #bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: calc(60px + env(safe-area-inset-bottom, 20px));
+      height: calc(68px + env(safe-area-inset-bottom, 20px));
       padding-bottom: env(safe-area-inset-bottom, 20px);
       background: white;
       border-top: 1px solid #e2e8f0;
@@ -2453,13 +2453,13 @@ window.qrcode = qrcode;
       background: none;
       cursor: pointer;
       color: #a0aec0;
-      font-size: 0.62rem;
-      font-weight: 500;
-      padding: 6px 4px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 8px 4px 10px;
       transition: color 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
-    .bnav-btn .bnav-icon { font-size: 1.35rem; line-height: 1; }
+    .bnav-btn .bnav-icon { font-size: 1.55rem; line-height: 1; }
     .bnav-btn.active { color: #2a4a7f; }
     .bnav-btn.active .bnav-icon { transform: scale(1.1); }
     .bnav-btn:active { background: #f0f4f8; border-radius: 8px; }
@@ -2636,26 +2636,34 @@ window.qrcode = qrcode;
       input, select, textarea { font-size: 16px !important; }
 
       /* 余白 */
-      #main { padding: 10px 8px; padding-bottom: calc(90px + env(safe-area-inset-bottom, 20px)); }
-      .card { padding: 12px 10px; }
-      .section-header { gap: 6px; flex-wrap: wrap; }
-      .section-header h2 { font-size: 0.95rem; }
-      .section-header > div { gap: 5px; flex-wrap: wrap; }
+      #main { padding: 10px 8px; padding-bottom: calc(98px + env(safe-area-inset-bottom, 20px)); }
+      .card { padding: 14px 12px; }
+      .section-header { gap: 8px; flex-wrap: wrap; }
+      .section-header h2 { font-size: 1.05rem; }
+      .section-header > div { gap: 6px; flex-wrap: wrap; }
 
-      /* ボタン（タップしやすく） */
-      .btn { padding: 10px 13px; font-size: 0.88rem; min-height: 42px; }
-      .btn-sm { padding: 8px 10px; font-size: 0.8rem; min-height: 36px; }
-      .modal-close { width: 40px; height: 40px; font-size: 1.2rem; }
+      /* ボタン（タップしやすく：最低44px） */
+      .btn { padding: 12px 16px; font-size: 0.95rem; min-height: 44px; border-radius: 10px; }
+      .btn-sm { padding: 10px 13px; font-size: 0.85rem; min-height: 44px; border-radius: 10px; }
+      .modal-close { width: 48px; height: 48px; font-size: 1.4rem; }
 
-      /* フォーム */
-      .form-group label { font-size: 0.88rem; }
-      .form-group { margin-bottom: 14px; }
+      /* フォーム（入力しやすく） */
+      .form-group label { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+      .form-group { margin-bottom: 16px; }
+      .form-group input, .form-group select, .form-group textarea {
+        padding: 13px 14px; font-size: 16px !important; border-radius: 10px;
+        border-width: 2px;
+      }
 
       /* 検索バー */
-      .search-bar input, .search-bar select { font-size: 16px !important; padding: 10px 12px; }
+      .search-bar input, .search-bar select { font-size: 16px !important; padding: 12px 14px; min-height: 44px; }
 
-      /* タブ */
-      .inner-tab { padding: 7px 10px; font-size: 0.8rem; }
+      /* タブ（タップしやすく） */
+      .inner-tab { padding: 11px 14px; font-size: 0.85rem; min-height: 44px; border-radius: 10px; }
+
+      /* モーダルタイトル */
+      .modal-title { font-size: 1.15rem; }
+      .modal { padding: 20px 16px 40px; }
 
       /* ===== 商品テーブル → カード ===== */
       #page-products .table-wrap { overflow-x: visible; }
@@ -2663,13 +2671,14 @@ window.qrcode = qrcode;
       #page-products tbody, #page-products tr, #page-products td { display: block; border: none; }
       #page-products thead { display: none; }
       #prod-body tr {
-        border: 1.5px solid #e2e8f0; border-radius: 12px;
-        margin-bottom: 10px; padding: 12px; background: white;
+        border: 1.5px solid #e2e8f0; border-radius: 14px;
+        margin-bottom: 12px; padding: 14px; background: white;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
       }
-      #prod-body td { padding: 2px 0; }
-      #prod-body .td-name { font-size: 1rem; margin-bottom: 4px; }
-      #prod-body .td-stock { margin: 4px 0; }
-      #prod-body .td-actions { margin-top: 8px; display: flex !important; gap: 6px; flex-wrap: wrap; }
+      #prod-body td { padding: 3px 0; }
+      #prod-body .td-name { font-size: 1.05rem; margin-bottom: 5px; }
+      #prod-body .td-stock { margin: 6px 0; font-size: 1rem; }
+      #prod-body .td-actions { margin-top: 10px; display: flex !important; gap: 8px; flex-wrap: wrap; }
       #prod-body .td-hide-mobile { display: none !important; }
       .td-meta-mobile { display: block; font-size: .75rem; color: #718096; margin-top: 2px; }
 
@@ -2709,6 +2718,14 @@ window.qrcode = qrcode;
       .td-hide-mobile { display: none !important; }
       .td-show-mobile { display: block !important; }
       .inv-btn-mobile { min-width: 60px; padding: 10px 14px !important; font-size: 0.95rem !important; }
+
+      /* テーブル行を広くしてタップしやすく */
+      td { padding: 12px 10px; font-size: 0.88rem; }
+      th { padding: 10px 10px; font-size: 0.82rem; }
+
+      /* 在庫ページのカードテーブル */
+      #page-materials td, #page-inventory td { padding: 12px 8px; }
+      #page-materials th, #page-inventory th { padding: 10px 8px; }
       /* bulk detail は横スクロール維持 */
       #mov-body tr[id^="bulk-detail"] td { display: table-cell !important; padding: 0; }
     }
@@ -2735,7 +2752,7 @@ window.qrcode = qrcode;
     .modal-title { font-size: 1rem; font-weight: 700; }
     .modal-close {
       background: #edf2f7; border: none; border-radius: 50%;
-      width: 30px; height: 30px; cursor: pointer; font-size: 1.1rem;
+      width: 44px; height: 44px; cursor: pointer; font-size: 1.3rem;
       display: flex; align-items: center; justify-content: center;
     }
 
@@ -2766,11 +2783,12 @@ window.qrcode = qrcode;
 
     /* トースト */
     #toast {
-      position: fixed; bottom: 70px; left: 50%;
+      position: fixed; bottom: 90px; left: 50%;
       transform: translateX(-50%) translateY(20px);
-      background: #2d3748; color: white; padding: 10px 20px;
-      border-radius: 8px; font-size: 0.85rem; z-index: 300;
+      background: #2d3748; color: white; padding: 14px 24px;
+      border-radius: 12px; font-size: 1rem; font-weight: 600; z-index: 300;
       opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -2958,10 +2976,10 @@ window.qrcode = qrcode;
     .import-row-err td:first-child { color: #c53030; font-weight: 700; }
 
     /* クイック入出庫 */
-    .quick-mov-btn { width: 100%; padding: 14px; font-size: 1rem; font-weight: 700;
-      border: none; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
-    .quick-mov-in { background: #c3dafe; color: #1a365d; }
-    .quick-mov-out { background: #fed7d7; color: #c53030; }
+    .quick-mov-btn { width: 100%; padding: 18px; font-size: 1.1rem; font-weight: 700;
+      border: none; border-radius: 12px; cursor: pointer; margin-bottom: 10px; }
+    .quick-mov-in { background: #2a4a7f; color: white; }
+    .quick-mov-out { background: #c53030; color: white; }
 
     /* ページタイトル */
     .page-title { font-size: 1rem; font-weight: 800; color: #2d3748; margin-bottom: 14px; }
@@ -3860,7 +3878,7 @@ function startApp() {
         <input type="text" id="mv-notes" placeholder="メモなど" />
       </div>
       <div id="mv-warn" class="warn-box" style="display:none">⚠ 出庫数が現在在庫を超えています</div>
-      <button type="submit" class="btn btn-primary" style="width:100%">記録する</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;font-size:1.05rem;padding:15px">✅ 記録する</button>
     </form>
   </div>
 </div>
@@ -4651,7 +4669,7 @@ function renderProducts() {
       <td class="td-hide-mobile">${yen(p.price||0)}</td>
       <td class="td-hide-mobile">${p.unit}</td>
       <td class="td-actions" style="white-space:nowrap">
-        <button class="btn btn-gray btn-sm" onclick="showProductQr('${p.id}',\`${p.name}\`)">📷QR</button>
+        <button class="btn btn-primary btn-sm" onclick="openMovFor('${p.id}')">📦 入出庫</button>
         <button class="btn btn-gray btn-sm" onclick="openProductModal('${p.id}')">編集</button>
         <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">削除</button>
       </td>
@@ -5097,6 +5115,19 @@ function updateStockPreview() {
     document.getElementById('mv-cur-stock').textContent = curLabel;
     warn.style.display = (type === 'out' || type === 'consign_out') && qty > curStock ? '' : 'none';
   }
+}
+
+// 商品カードから直接入出庫モーダルを開く
+function openMovFor(productId) {
+  openMovementModal();
+  const d = load();
+  const p = d.products.find(x => x.id === productId);
+  if (!p) return;
+  setTimeout(() => {
+    document.getElementById('mv-cat').value = 'product';
+    mvPickerSelect(p.id, p.name, p.stock || 0, p.unit || '個');
+    updateStockPreview();
+  }, 80);
 }
 
 function openMovementModal() {
