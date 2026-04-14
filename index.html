@@ -8211,5 +8211,21 @@ function reloadApp() {
   } catch(e) {}
 })();
 </script>
+<script>
+// Service Worker登録（PWAキャッシュ自動更新）
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/zaiko-app/sw.js').then((reg) => {
+    // 新しいバージョンがあれば即座に適用
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'activated') {
+          window.location.reload();
+        }
+      });
+    });
+  });
+}
+</script>
 </body>
 </html>
