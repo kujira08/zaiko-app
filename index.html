@@ -2689,31 +2689,50 @@ window.qrcode = qrcode;
       #page-movements thead { display: none; }
       #mov-body tr { display: block; }
       #mov-body tr:not([id^="bulk-detail"]) {
-        border: 1.5px solid #e2e8f0; border-radius: 12px;
-        margin-bottom: 10px; padding: 0; background: white;
-        overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        border: none; border-radius: 14px;
+        margin-bottom: 12px; padding: 0; background: white;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-left: 5px solid #e2e8f0;
       }
+      #mov-body tr[data-movtype="in"]:not([id^="bulk-detail"]) { border-left-color: #4f7df0; }
+      #mov-body tr[data-movtype="out"]:not([id^="bulk-detail"]) { border-left-color: #e53e3e; }
+      #mov-body tr[data-movtype="consign_out"]:not([id^="bulk-detail"]) { border-left-color: #805ad5; }
+      #mov-body tr[data-movtype="consign_return"]:not([id^="bulk-detail"]) { border-left-color: #38b2ac; }
+      #mov-body tr[data-movtype="bulk"]:not([id^="bulk-detail"]) { border-left-color: #ed8936; }
       #mov-body tr:not([id^="bulk-detail"]) td { display: block; padding: 0; border: none; }
-      /* 日付 */
-      #mov-body .td-mov-date {
-        font-size: .75rem; color: #718096;
-        padding: 7px 12px 0; display: block;
+      /* ヘッダー行：日付 + バッジ + 削除 */
+      #mov-body .td-mov-header {
+        display: flex !important; align-items: center; justify-content: space-between;
+        padding: 10px 12px 6px;
+        gap: 8px;
+      }
+      #mov-body .td-mov-header-left {
+        display: flex; align-items: center; gap: 8px; flex: 1;
+      }
+      #mov-body .td-mov-date-text {
+        font-size: .78rem; color: #718096; font-weight: 600; letter-spacing: 0.02em;
+        white-space: nowrap;
       }
       /* 商品名 */
       #mov-body .td-mov-name {
-        font-weight: 700; font-size: 1rem; color: #1a202c;
-        padding: 2px 12px 6px; display: block;
-        border-bottom: 1px solid #f0f4f8;
+        font-weight: 700; font-size: 1.05rem; color: #1a202c;
+        padding: 0 12px 8px; display: block;
+        line-height: 1.3;
       }
-      /* バッジ・数量・委託先 */
+      /* 数量・委託先・備考 */
       #mov-body .td-mov-meta {
-        font-size: .88rem; padding: 8px 12px;
-        display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+        font-size: .88rem; padding: 0 12px 12px;
+        display: flex !important; flex-wrap: wrap; align-items: center; gap: 6px;
+        border-top: 1px solid #f0f4f8; padding-top: 8px;
       }
-      /* 削除ボタン行 */
-      #mov-body tr:not([id^="bulk-detail"]) td:last-child {
-        padding: 0 10px 10px; text-align: right;
+      .td-mov-qty {
+        font-size: 1.15rem; font-weight: 800;
+        color: inherit;
       }
+      .td-mov-qty.qty-in { color: #2b6cb0; }
+      .td-mov-qty.qty-out { color: #c53030; }
+      .td-mov-qty.qty-consign { color: #6b46c1; }
       #mov-body .td-hide-mobile { display: none !important; }
       .td-hide-mobile { display: none !important; }
       .td-show-mobile { display: block !important; }
@@ -2728,6 +2747,12 @@ window.qrcode = qrcode;
       #page-materials th, #page-inventory th { padding: 10px 8px; }
       /* bulk detail は横スクロール維持 */
       #mov-body tr[id^="bulk-detail"] td { display: table-cell !important; padding: 0; }
+      /* bulkDetail内テーブル */
+      .bulk-detail-inner { padding: 4px 12px 12px; }
+      .bulk-detail-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f4f8; font-size: .88rem; }
+      .bulk-detail-row:last-child { border-bottom: none; }
+      .bulk-detail-name { flex: 1; font-weight: 600; color: #2d3748; }
+      .bulk-detail-date { color: #a0aec0; font-size: .75rem; white-space: nowrap; }
     }
 
     /* モーダル */
@@ -3379,17 +3404,21 @@ function startApp() {
         <button class="btn btn-primary" onclick="openMovementModal()">＋ 記録する</button>
       </div>
     </div>
-    <div class="search-bar" style="flex-wrap:wrap;gap:6px">
-      <input type="text" id="mov-search" placeholder="商品名で検索..." oninput="renderMovementsPage()" style="flex:1;min-width:130px" />
-      <select id="mov-type-filter" onchange="renderMovementsPage()">
+    <div class="search-bar" style="flex-wrap:wrap;gap:8px;align-items:center">
+      <input type="text" id="mov-search" placeholder="🔍 商品名で検索..." oninput="renderMovementsPage()" style="flex:1;min-width:140px" />
+      <select id="mov-type-filter" onchange="renderMovementsPage()" style="min-width:100px">
         <option value="">全種別</option>
-        <option value="in">入庫</option>
-        <option value="out">出庫</option>
-        <option value="consign_out">委託出庫</option>
-        <option value="consign_return">委託返却</option>
+        <option value="in">📥 入庫</option>
+        <option value="out">📤 出庫</option>
+        <option value="consign_out">🤝 委託出庫</option>
+        <option value="consign_return">↩ 委託返却</option>
       </select>
-      <input type="date" id="mov-date-from" oninput="renderMovementsPage()" title="開始日" />
-      <input type="date" id="mov-date-to" oninput="renderMovementsPage()" title="終了日" />
+      <div style="display:flex;align-items:center;gap:4px;font-size:.82rem;color:#718096">
+        <span>期間</span>
+        <input type="date" id="mov-date-from" oninput="renderMovementsPage()" style="font-size:.82rem;padding:6px 8px" />
+        <span>〜</span>
+        <input type="date" id="mov-date-to" oninput="renderMovementsPage()" style="font-size:.82rem;padding:6px 8px" />
+      </div>
     </div>
     <div class="card">
       <div class="table-wrap">
@@ -5246,14 +5275,23 @@ function renderMovementsPage() {
       const m = row.m;
       const name = getItemName(d, m);
       const c = d.consignees.find(x => x.id === m.consigneeId);
-      return `<tr>
-        <td class="td-mov-date">${m.date}</td>
+      const qtyClass = m.type === 'in' ? 'qty-in' : m.type === 'out' ? 'qty-out' : 'qty-consign';
+      const qtySign = m.type === 'in' ? '+' : m.type === 'out' ? '-' : '';
+      return `<tr data-movtype="${m.type}">
+        <td class="td-mov-header">
+          <div class="td-mov-header-left">
+            <span class="td-mov-date-text">${m.date}</span>
+            ${movBadge(m.type)}
+          </div>
+          <button class="btn btn-danger btn-sm" style="padding:4px 10px;font-size:.75rem;min-width:auto" onclick="deleteMovement('${m.id}')">✕</button>
+        </td>
         <td class="td-mov-name">${name}</td>
-        <td class="td-mov-meta">${movBadge(m.type)} <strong style="font-size:1rem">${fmt(m.qty,1)} ${m.unit||''}</strong>${c ? `<span style="font-weight:700;color:#2a4a7f;font-size:.88rem;background:#ebf8ff;padding:2px 8px;border-radius:999px">🤝 ${c.name}</span>` : ''}${m.userName ? `<span style="font-size:.75rem;color:#718096;background:#f7fafc;padding:1px 6px;border-radius:4px">👤 ${m.userName}</span>` : ''}${m.notes ? `<span style="font-size:.78rem;color:#718096">${m.notes}</span>` : ''}</td>
-        <td class="td-hide-mobile"><strong>${fmt(m.qty,1)} ${m.unit||''}</strong></td>
-        <td class="td-hide-mobile" style="font-size:.85rem;font-weight:600;color:#2a4a7f">${c ? `🤝 ${c.name}` : '-'}</td>
-        <td class="td-hide-mobile" style="font-size:.78rem;color:#718096">${m.userName ? `👤 ${m.userName}` : '-'}${m.notes ? ` / ${m.notes}` : ''}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteMovement('${m.id}')">削除</button></td>
+        <td class="td-mov-meta">
+          <span class="td-mov-qty ${qtyClass}">${qtySign}${fmt(m.qty,1)} ${m.unit||''}</span>
+          ${c ? `<span style="font-size:.8rem;font-weight:700;color:#553c9a;background:#faf5ff;padding:3px 9px;border-radius:999px">🤝 ${c.name}</span>` : ''}
+          ${m.userName ? `<span style="font-size:.75rem;color:#718096;background:#f7fafc;padding:2px 7px;border-radius:4px">👤 ${m.userName}</span>` : ''}
+          ${m.notes ? `<span style="font-size:.8rem;color:#718096">📝 ${m.notes}</span>` : ''}
+        </td>
       </tr>`;
     } else {
       const group = bulkGroups[row.bulkId];
@@ -5261,27 +5299,36 @@ function renderMovementsPage() {
       const c = d.consignees.find(x => x.id === first.consigneeId);
       const names = group.map(m => getItemName(d, m));
       const label = names[0] + (names.length > 1 ? `　他${names.length - 1}件` : '');
-      return `<tr style="background:#fafafa">
-        <td class="td-mov-date" style="cursor:pointer" onclick="toggleBulkHistory('${row.bulkId}')">${first.date}</td>
-        <td class="td-mov-name" style="cursor:pointer" onclick="toggleBulkHistory('${row.bulkId}')">📦 ${label}</td>
-        <td class="td-mov-meta" style="cursor:pointer" onclick="toggleBulkHistory('${row.bulkId}')">${movBadge(first.type)} <strong>${group.length}件</strong>${c ? `<br><span style="font-weight:700;color:#2a4a7f;font-size:.88rem">🤝 ${c.name}</span>` : ''} <span style="color:#4299e1;font-size:.8rem">▼</span></td>
-        <td class="td-hide-mobile" style="cursor:pointer" onclick="toggleBulkHistory('${row.bulkId}')"><strong>${group.length}件</strong></td>
-        <td class="td-hide-mobile" style="font-size:.85rem;font-weight:600;color:#2a4a7f;cursor:pointer" onclick="toggleBulkHistory('${row.bulkId}')">${c ? `🤝 ${c.name}` : '-'}</td>
-        <td class="td-hide-mobile" style="font-size:.78rem;color:#4299e1;cursor:pointer" onclick="toggleBulkHistory('${row.bulkId}')">▼ 詳細</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteBulkMovement('${row.bulkId}')">削除</button></td>
+      return `<tr data-movtype="bulk" style="cursor:pointer" onclick="toggleBulkHistory('${row.bulkId}')">
+        <td class="td-mov-header">
+          <div class="td-mov-header-left">
+            <span class="td-mov-date-text">${first.date}</span>
+            ${movBadge(first.type)}
+            <span style="font-size:.75rem;color:#ed8936;font-weight:700;background:#fffaf0;padding:2px 7px;border-radius:999px">📦 ${group.length}件まとめて</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="color:#a0aec0;font-size:.85rem" id="bulk-arrow-${row.bulkId}">▼</span>
+            <button class="btn btn-danger btn-sm" style="padding:4px 10px;font-size:.75rem;min-width:auto" onclick="event.stopPropagation();deleteBulkMovement('${row.bulkId}')">✕</button>
+          </div>
+        </td>
+        <td class="td-mov-name">📦 ${label}</td>
+        <td class="td-mov-meta">
+          ${c ? `<span style="font-size:.8rem;font-weight:700;color:#553c9a;background:#faf5ff;padding:3px 9px;border-radius:999px">🤝 ${c.name}</span>` : ''}
+        </td>
       </tr>
-      <tr id="bulk-detail-${row.bulkId}" style="display:none;background:#f7fafc">
-        <td colspan="7" style="padding:0">
-          <table style="width:100%">
-            ${group.map(m => `
-            <tr>
-              <td style="padding:5px 10px;color:#718096;font-size:.8rem;width:80px">${m.date}</td>
-              <td style="padding:5px 10px;font-size:.85rem;font-weight:500">${getItemName(d,m)}</td>
-              <td style="padding:5px 10px">${movBadge(m.type)}</td>
-              <td style="padding:5px 10px;font-size:.85rem"><strong>${fmt(m.qty,1)} ${m.unit||''}</strong></td>
-              <td></td><td></td><td></td>
-            </tr>`).join('')}
-          </table>
+      <tr id="bulk-detail-${row.bulkId}" style="display:none;background:#f8fafc">
+        <td colspan="7" style="padding:0;border:none">
+          <div class="bulk-detail-inner">
+            ${group.map(m => {
+              const qtyClass = m.type === 'in' ? 'qty-in' : m.type === 'out' ? 'qty-out' : 'qty-consign';
+              const qtySign = m.type === 'in' ? '+' : m.type === 'out' ? '-' : '';
+              return `<div class="bulk-detail-row">
+                ${movBadge(m.type)}
+                <span class="bulk-detail-name">${getItemName(d,m)}</span>
+                <span class="td-mov-qty ${qtyClass}" style="font-size:.95rem">${qtySign}${fmt(m.qty,1)} ${m.unit||''}</span>
+              </div>`;
+            }).join('')}
+          </div>
         </td>
       </tr>`;
     }
@@ -5290,7 +5337,11 @@ function renderMovementsPage() {
 
 function toggleBulkHistory(bulkId) {
   const row = document.getElementById('bulk-detail-' + bulkId);
-  if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+  const arrow = document.getElementById('bulk-arrow-' + bulkId);
+  if (!row) return;
+  const isHidden = row.style.display === 'none';
+  row.style.display = isHidden ? 'table-row' : 'none';
+  if (arrow) arrow.textContent = isHidden ? '▲' : '▼';
 }
 
 // 在庫を逆算して戻す
