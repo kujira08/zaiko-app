@@ -5117,17 +5117,9 @@ function updateStockPreview() {
   }
 }
 
-// 商品カードから直接入出庫モーダルを開く
+// 商品カードから直接クイック入出庫モーダルを開く
 function openMovFor(productId) {
-  openMovementModal();
-  const d = load();
-  const p = d.products.find(x => x.id === productId);
-  if (!p) return;
-  setTimeout(() => {
-    document.getElementById('mv-cat').value = 'product';
-    mvPickerSelect(p.id, p.name, p.stock || 0, p.unit || '個');
-    updateStockPreview();
-  }, 80);
+  openQuickMov('product', productId);
 }
 
 function openMovementModal() {
