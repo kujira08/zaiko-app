@@ -2689,11 +2689,11 @@ window.qrcode = qrcode;
       #page-movements thead { display: none; }
       #mov-body tr { display: block; }
       #mov-body tr:not([id^="bulk-detail"]) {
-        border: none; border-radius: 14px;
-        margin-bottom: 12px; padding: 0; background: white;
+        border: none; border-radius: 10px;
+        margin-bottom: 8px; padding: 0; background: white;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border-left: 5px solid #e2e8f0;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        border-left: 4px solid #e2e8f0;
       }
       #mov-body tr[data-movtype="in"]:not([id^="bulk-detail"]) { border-left-color: #4f7df0; }
       #mov-body tr[data-movtype="out"]:not([id^="bulk-detail"]) { border-left-color: #e53e3e; }
@@ -2701,38 +2701,48 @@ window.qrcode = qrcode;
       #mov-body tr[data-movtype="consign_return"]:not([id^="bulk-detail"]) { border-left-color: #38b2ac; }
       #mov-body tr[data-movtype="bulk"]:not([id^="bulk-detail"]) { border-left-color: #ed8936; }
       #mov-body tr:not([id^="bulk-detail"]) td { display: block; padding: 0; border: none; }
-      /* ヘッダー行：日付 + バッジ + 削除 */
+      /* カード1行：品名 + 数量 + 削除ボタン */
       #mov-body .td-mov-header {
-        display: flex !important; align-items: center; justify-content: space-between;
-        padding: 10px 12px 6px;
-        gap: 8px;
+        display: flex !important; align-items: center;
+        padding: 9px 10px 9px 12px; gap: 8px;
       }
       #mov-body .td-mov-header-left {
-        display: flex; align-items: center; gap: 8px; flex: 1;
+        display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0;
       }
       #mov-body .td-mov-date-text {
-        font-size: .78rem; color: #718096; font-weight: 600; letter-spacing: 0.02em;
-        white-space: nowrap;
+        font-size: .72rem; color: #a0aec0; font-weight: 500;
       }
-      /* 商品名 */
-      #mov-body .td-mov-name {
-        font-weight: 700; font-size: 1.05rem; color: #1a202c;
-        padding: 0 12px 8px; display: block;
-        line-height: 1.3;
+      .td-mov-main-row {
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
       }
-      /* 数量・委託先・備考 */
-      #mov-body .td-mov-meta {
-        font-size: .88rem; padding: 0 12px 12px;
-        display: flex !important; flex-wrap: wrap; align-items: center; gap: 6px;
-        border-top: 1px solid #f0f4f8; padding-top: 8px;
+      .td-mov-item-name {
+        font-weight: 700; font-size: .95rem; color: #1a202c;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        max-width: 200px;
       }
       .td-mov-qty {
-        font-size: 1.15rem; font-weight: 800;
-        color: inherit;
+        font-size: .92rem; font-weight: 700;
+        white-space: nowrap;
       }
-      .td-mov-qty.qty-in { color: #2b6cb0; }
+      .td-mov-qty.qty-in  { color: #2b6cb0; }
       .td-mov-qty.qty-out { color: #c53030; }
       .td-mov-qty.qty-consign { color: #6b46c1; }
+      /* サブ行（委託先・備考） */
+      .td-mov-sub {
+        font-size: .75rem; color: #718096; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1px;
+      }
+      /* 削除ボタン：小さい丸 */
+      .mov-del-btn {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: #fff0f0; border: 1px solid #fed7d7;
+        color: #e53e3e; font-size: .8rem; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; flex-shrink: 0; line-height: 1;
+        padding: 0;
+      }
+      /* 商品名・数量・meta をheaderに統合したので非表示 */
+      #mov-body .td-mov-name { display: none !important; }
+      #mov-body .td-mov-meta { display: none !important; }
       #mov-body .td-hide-mobile { display: none !important; }
       .td-hide-mobile { display: none !important; }
       .td-show-mobile { display: block !important; }
@@ -2748,11 +2758,11 @@ window.qrcode = qrcode;
       /* bulk detail は横スクロール維持 */
       #mov-body tr[id^="bulk-detail"] td { display: table-cell !important; padding: 0; }
       /* bulkDetail内テーブル */
-      .bulk-detail-inner { padding: 4px 12px 12px; }
-      .bulk-detail-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f4f8; font-size: .88rem; }
+      .bulk-detail-inner { padding: 4px 10px 10px; }
+      .bulk-detail-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #f0f4f8; font-size: .82rem; }
       .bulk-detail-row:last-child { border-bottom: none; }
       .bulk-detail-name { flex: 1; font-weight: 600; color: #2d3748; }
-      .bulk-detail-date { color: #a0aec0; font-size: .75rem; white-space: nowrap; }
+      .bulk-detail-date { color: #a0aec0; font-size: .72rem; white-space: nowrap; }
     }
 
     /* モーダル */
@@ -5277,20 +5287,22 @@ function renderMovementsPage() {
       const c = d.consignees.find(x => x.id === m.consigneeId);
       const qtyClass = m.type === 'in' ? 'qty-in' : m.type === 'out' ? 'qty-out' : 'qty-consign';
       const qtySign = m.type === 'in' ? '+' : m.type === 'out' ? '-' : '';
+      const sub = [
+        c ? `🤝 ${c.name}` : '',
+        m.notes ? `📝 ${m.notes}` : '',
+        m.userName ? `👤 ${m.userName}` : ''
+      ].filter(Boolean).join('　');
       return `<tr data-movtype="${m.type}">
         <td class="td-mov-header">
           <div class="td-mov-header-left">
-            <span class="td-mov-date-text">${m.date}</span>
-            ${movBadge(m.type)}
+            <div class="td-mov-date-text">${m.date}　${movBadge(m.type)}</div>
+            <div class="td-mov-main-row">
+              <span class="td-mov-item-name">${name}</span>
+              <span class="td-mov-qty ${qtyClass}">${qtySign}${fmt(m.qty,1)} ${m.unit||''}</span>
+            </div>
+            ${sub ? `<div class="td-mov-sub">${sub}</div>` : ''}
           </div>
-          <button class="btn btn-danger btn-sm" style="padding:4px 10px;font-size:.75rem;min-width:auto" onclick="deleteMovement('${m.id}')">✕</button>
-        </td>
-        <td class="td-mov-name">${name}</td>
-        <td class="td-mov-meta">
-          <span class="td-mov-qty ${qtyClass}">${qtySign}${fmt(m.qty,1)} ${m.unit||''}</span>
-          ${c ? `<span style="font-size:.8rem;font-weight:700;color:#553c9a;background:#faf5ff;padding:3px 9px;border-radius:999px">🤝 ${c.name}</span>` : ''}
-          ${m.userName ? `<span style="font-size:.75rem;color:#718096;background:#f7fafc;padding:2px 7px;border-radius:4px">👤 ${m.userName}</span>` : ''}
-          ${m.notes ? `<span style="font-size:.8rem;color:#718096">📝 ${m.notes}</span>` : ''}
+          <button class="mov-del-btn" onclick="deleteMovement('${m.id}')">✕</button>
         </td>
       </tr>`;
     } else {
@@ -5298,22 +5310,21 @@ function renderMovementsPage() {
       const first = group[0];
       const c = d.consignees.find(x => x.id === first.consigneeId);
       const names = group.map(m => getItemName(d, m));
-      const label = names[0] + (names.length > 1 ? `　他${names.length - 1}件` : '');
+      const label = names[0] + (names.length > 1 ? ` 他${names.length - 1}件` : '');
       return `<tr data-movtype="bulk" style="cursor:pointer" onclick="toggleBulkHistory('${row.bulkId}')">
         <td class="td-mov-header">
           <div class="td-mov-header-left">
-            <span class="td-mov-date-text">${first.date}</span>
-            ${movBadge(first.type)}
-            <span style="font-size:.75rem;color:#ed8936;font-weight:700;background:#fffaf0;padding:2px 7px;border-radius:999px">📦 ${group.length}件まとめて</span>
+            <div class="td-mov-date-text">${first.date}　${movBadge(first.type)}</div>
+            <div class="td-mov-main-row">
+              <span class="td-mov-item-name">📦 ${label}</span>
+              <span style="font-size:.75rem;color:#ed8936;font-weight:700">${group.length}件まとめて</span>
+            </div>
+            ${c ? `<div class="td-mov-sub">🤝 ${c.name}</div>` : ''}
           </div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <span style="color:#a0aec0;font-size:.85rem" id="bulk-arrow-${row.bulkId}">▼</span>
-            <button class="btn btn-danger btn-sm" style="padding:4px 10px;font-size:.75rem;min-width:auto" onclick="event.stopPropagation();deleteBulkMovement('${row.bulkId}')">✕</button>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="color:#a0aec0;font-size:.8rem" id="bulk-arrow-${row.bulkId}">▼</span>
+            <button class="mov-del-btn" onclick="event.stopPropagation();deleteBulkMovement('${row.bulkId}')">✕</button>
           </div>
-        </td>
-        <td class="td-mov-name">📦 ${label}</td>
-        <td class="td-mov-meta">
-          ${c ? `<span style="font-size:.8rem;font-weight:700;color:#553c9a;background:#faf5ff;padding:3px 9px;border-radius:999px">🤝 ${c.name}</span>` : ''}
         </td>
       </tr>
       <tr id="bulk-detail-${row.bulkId}" style="display:none;background:#f8fafc">
@@ -5325,7 +5336,7 @@ function renderMovementsPage() {
               return `<div class="bulk-detail-row">
                 ${movBadge(m.type)}
                 <span class="bulk-detail-name">${getItemName(d,m)}</span>
-                <span class="td-mov-qty ${qtyClass}" style="font-size:.95rem">${qtySign}${fmt(m.qty,1)} ${m.unit||''}</span>
+                <span class="td-mov-qty ${qtyClass}">${qtySign}${fmt(m.qty,1)} ${m.unit||''}</span>
               </div>`;
             }).join('')}
           </div>
