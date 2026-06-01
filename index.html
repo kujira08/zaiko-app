@@ -4598,6 +4598,8 @@ function movBadge(type) {
     out: '<span class="badge badge-red">出庫</span>',
     consign_out: '<span class="badge badge-purple">委託出庫</span>',
     consign_return: '<span class="badge badge-blue">委託返却</span>',
+    '委託売上': '<span class="badge badge-purple">委託出庫</span>', // 旧タイプ後方互換
+    adjust: '<span class="badge badge-gray">調整</span>',
   };
   return map[type] || type;
 }
@@ -4610,11 +4612,13 @@ function calcConsignStock(d) {
   const result = {};
   (d.movements || []).forEach(m => {
     if (m.cat !== 'product') return;
-    if (m.type !== 'consign_out' && m.type !== 'consign_return') return;
+    if (m.type !== 'consign_out' && m.type !== 'consign_return' && m.type !== '委託売上') return;
     const cid = m.consigneeId || '_none';
     if (!result[m.itemId]) result[m.itemId] = {};
     if (!result[m.itemId][cid]) result[m.itemId][cid] = 0;
-    result[m.itemId][cid] += (m.type === 'consign_out' ? 1 : -1) * (m.qty || 0);
+    // 'consign_out' と旧タイプ '委託売上' はどちらも +1、'consign_return' は -1
+    const sign = (m.type === 'consign_return') ? -1 : 1;
+    result[m.itemId][cid] += sign * (m.qty || 0);
   });
   return result;
 }
@@ -5361,7 +5365,7 @@ function reverseMovementStock(d, m) {
     const i = d.products.findIndex(p => p.id === m.itemId);
     if (i < 0) return;
     if (m.type === 'in')           d.products[i].stock = Math.max(0, (d.products[i].stock||0) - m.qty);
-    if (m.type === 'out' || m.type === 'consign_out')    d.products[i].stock = (d.products[i].stock||0) + m.qty;
+    if (m.type === 'out' || m.type === 'consign_out' || m.type === '委託売上') d.products[i].stock = (d.products[i].stock||0) + m.qty;
     if (m.type === 'consign_return') d.products[i].stock = Math.max(0, (d.products[i].stock||0) - m.qty);
   } else {
     const i = d.materials.findIndex(x => x.id === m.itemId);
@@ -5369,11 +5373,11 @@ function reverseMovementStock(d, m) {
     const mat = d.materials[i];
     if (mat.type === '染料') {
       if (m.type === 'in')           d.materials[i].weightKg = Math.max(0, (mat.weightKg||0) - m.qty);
-      if (m.type === 'out' || m.type === 'consign_out')  d.materials[i].weightKg = (mat.weightKg||0) + m.qty;
+      if (m.type === 'out' || m.type === 'consign_out' || m.type === '委託売上') d.materials[i].weightKg = (mat.weightKg||0) + m.qty;
       if (m.type === 'consign_return') d.materials[i].weightKg = Math.max(0, (mat.weightKg||0) - m.qty);
     } else if (mat.type !== '生地') {
       if (m.type === 'in')           d.materials[i].stock = Math.max(0, (mat.stock||0) - m.qty);
-      if (m.type === 'out' || m.type === 'consign_out')  d.materials[i].stock = (mat.stock||0) + m.qty;
+      if (m.type === 'out' || m.type === 'consign_out' || m.type === '委託売上') d.materials[i].stock = (mat.stock||0) + m.qty;
       if (m.type === 'consign_return') d.materials[i].stock = Math.max(0, (mat.stock||0) - m.qty);
     }
   }
@@ -5462,7 +5466,7 @@ function saveConsignee(e) {
 function getConsignQty(itemId, cat, consigneeId, movements) {
   let total = 0;
   movements.filter(m => m.itemId === itemId && m.consigneeId === consigneeId).forEach(m => {
-    if (m.type === 'consign_out') total += m.qty;
+    if (m.type === 'consign_out' || m.type === '委託売上') total += m.qty;
     if (m.type === 'consign_return') total -= m.qty;
   });
   return Math.max(0, total);
@@ -7818,7 +7822,7 @@ function renderMonthlyChart(d) {
       .reduce((s,mv) => s + (mv.qty||0), 0);
   });
   const outData = months.map(m => {
-    return d.movements.filter(mv => mv.cat==='product' && (mv.type==='out'||mv.type==='consign_out') && mv.date.startsWith(`${m.year}-${String(m.month).padStart(2,'0')}`))
+    return d.movements.filter(mv => mv.cat==='product' && (mv.type==='out'||mv.type==='consign_out'||mv.type==='委託売上') && mv.date.startsWith(`${m.year}-${String(m.month).padStart(2,'0')}`))
       .reduce((s,mv) => s + (mv.qty||0), 0);
   });
 

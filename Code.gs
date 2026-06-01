@@ -826,38 +826,53 @@ function addConsigneesOnce() {
 
 // ============================================================
 // 委託売上記録（Telegramボットから呼び出し）
-// MOVEMENTSシートに追記するのみ（在庫は委託出庫時に変更済み）
+// MOVEMENTSシートに追記 + PRODUCTSシートの在庫を直接減算
 // ============================================================
 function addConsignmentSales(body) {
   try {
     var ss = getSpreadsheet();
-    var movSheet = getSheet(ss, SHEET_MOVEMENTS);
+    var movSheet  = getSheet(ss, SHEET_MOVEMENTS);
+    var prodSheet = getSheet(ss, SHEET_PRODUCTS);
     var tz = Session.getScriptTimeZone();
 
     var consigneeId   = body.consigneeId   || '';
     var consigneeName = body.consigneeName || '';
-    var date  = body.date  || Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
-    var notes = body.notes || ('委託売上: ' + consigneeName);
+    var date   = body.date  || Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+    var notes  = body.notes || ('委託売上: ' + consigneeName);
     var bulkId = 'bot_' + new Date().getTime();
-    var items = body.items || [];
+    var items  = body.items || [];
+
+    // PRODUCTSシートを id→行番号 でマップ化（ヘッダー除く）
+    var prodData   = prodSheet.getDataRange().getValues();
+    var idCol      = PROD_COLS.indexOf('id');    // 0
+    var stockCol   = PROD_COLS.indexOf('stock'); // 4
+    var prodRowMap = {};
+    for (var i = 1; i < prodData.length; i++) {
+      var pid = prodData[i][idCol];
+      if (pid) prodRowMap[pid] = i + 1;
+    }
 
     var results = [];
     items.forEach(function(item) {
+      var qty = item.qty || 0;
+
+      // MOVEMENTS に追記（'consign_out' タイプで記録）
       var movId = 'mv_' + new Date().getTime() + '_' + Math.random().toString(36).substr(2, 6);
       movSheet.appendRow([
-        movId,
-        'product',
-        item.productId || '',
-        '委託売上',
-        item.qty || 0,
-        item.unit || '個',
-        consigneeId,
-        date,
-        notes,
-        'ふにょりんBot',
-        bulkId
+        movId, 'product', item.productId || '', 'consign_out',
+        qty, item.unit || '個', consigneeId, date, notes, 'ふにょりんBot', bulkId
       ]);
-      results.push({ productName: item.productName || item.productId, qty: item.qty });
+
+      // PRODUCTS の在庫を減算（0以下にはしない）
+      var rowNum = prodRowMap[item.productId];
+      if (rowNum && qty > 0) {
+        var currentStock = Number(prodData[rowNum - 1][stockCol]) || 0;
+        var newStock = Math.max(0, currentStock - qty);
+        prodSheet.getRange(rowNum, stockCol + 1).setValue(newStock);
+        prodData[rowNum - 1][stockCol] = newStock; // 同商品が複数ある場合に対応
+      }
+
+      results.push({ productName: item.productName || item.productId, qty: qty });
     });
 
     SpreadsheetApp.flush();
