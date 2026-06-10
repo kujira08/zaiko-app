@@ -2701,6 +2701,18 @@ window.qrcode = qrcode;
       #mov-body tr[data-movtype="consign_out"]:not([id^="bulk-detail"]) { border-left-color: #805ad5; }
       #mov-body tr[data-movtype="consign_return"]:not([id^="bulk-detail"]) { border-left-color: #38b2ac; }
       #mov-body tr[data-movtype="bulk"]:not([id^="bulk-detail"]) { border-left-color: #ed8936; }
+      #mov-body tr[data-movtype="委託売上"]:not([id^="bulk-detail"]) { border-left-color: #805ad5; }
+      /* 日付見出し・もっと見る行はカード装飾を打ち消す */
+      #mov-body tr.mov-date-header, #mov-body tr.mov-more-row {
+        background: transparent; box-shadow: none; border-left: none;
+        border-radius: 0; margin: 0; overflow: visible;
+      }
+      #mov-body tr.mov-date-header { margin: 16px 0 8px; }
+      #mov-body tr.mov-date-header td {
+        background: transparent; padding: 0 2px;
+        font-size: .85rem; font-weight: 700; color: #4a5568;
+      }
+      #mov-body tr.mov-more-row td { background: transparent; padding: 4px 0 12px; }
       #mov-body tr:not([id^="bulk-detail"]) td { display: block; padding: 0; border: none; }
       /* カード1行：品名 + 数量 + 削除ボタン */
       #mov-body .td-mov-header {
@@ -2861,6 +2873,13 @@ window.qrcode = qrcode;
     input.big-input {
       font-size: 1.3rem; text-align: center; font-weight: 700; padding: 12px;
     }
+
+    /* ===== 入出庫：日付見出し（PC表示用） ===== */
+    .mov-date-header td {
+      background: #edf2f7; font-weight: 700; font-size: .82rem;
+      color: #4a5568; padding: 8px 12px; border: none;
+    }
+    .mov-more-row td { border: none; background: none; padding: 10px; }
 
     /* ===== QRスキャン ===== */
     #qr-scan-fab {
@@ -4603,7 +4622,11 @@ function showToastError(msg) {
 }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function today() { return new Date().toISOString().slice(0, 10); }
+// ローカル日付（toISOStringはUTCのため朝9時前に前日になるバグがあった）
+function today() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
 function yen(v) { return '¥' + Math.round(v).toLocaleString(); }
 function fmt(v, dec=2) { return Number(v).toLocaleString('ja-JP', { maximumFractionDigits: dec }); }
 
@@ -5448,6 +5471,30 @@ function saveMovement(e) {
   }
 }
 
+// 入出庫履歴の表示件数（「もっと見る」で増える）
+var _movLimit = 50;
+
+// 日付ラベル（今日・昨日・M/D（曜））
+function movDateLabel(dateStr) {
+  if (!dateStr) return '日付なし';
+  if (dateStr === today()) return '今日';
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const yesterday = y.getFullYear() + '-' + String(y.getMonth()+1).padStart(2,'0') + '-' + String(y.getDate()).padStart(2,'0');
+  if (dateStr === yesterday) return '昨日';
+  const parts = String(dateStr).split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return dateStr;
+  const wd = ['日','月','火','水','木','金','土'][new Date(parts[0], parts[1]-1, parts[2]).getDay()];
+  const yearPrefix = parts[0] !== new Date().getFullYear() ? parts[0] + '年' : '';
+  return `${yearPrefix}${parts[1]}/${parts[2]}（${wd}）`;
+}
+
+// 数量の符号（在庫が増える=＋、減る=−）
+function movQtySign(type) {
+  if (type === 'in' || type === 'consign_return') return '+';
+  if (type === 'out' || type === 'consign_out' || type === '委託売上') return '−';
+  return '';
+}
+
 function renderMovementsPage() {
   const d = load();
   const typeFilter = document.getElementById('mov-type-filter').value;
@@ -5468,7 +5515,6 @@ function renderMovementsPage() {
   // bulkIdがあるものをグループ化
   const bulkGroups = {};
   const orderedRows = [];
-  const seen = new Set();
   movs.forEach(m => {
     if (m.bulkId) {
       if (!bulkGroups[m.bulkId]) {
@@ -5481,25 +5527,35 @@ function renderMovementsPage() {
     }
   });
 
-  tbody.innerHTML = orderedRows.map(row => {
+  // 表示件数を制限（もっと見るで追加）
+  const totalRows = orderedRows.length;
+  const visibleRows = orderedRows.slice(0, _movLimit);
+
+  let lastDate = null;
+  let html = visibleRows.map(row => {
+    const rowDate = row.kind === 'single' ? row.m.date : bulkGroups[row.bulkId][0].date;
+    let header = '';
+    if (rowDate !== lastDate) {
+      header = `<tr class="mov-date-header"><td colspan="7">📅 ${movDateLabel(rowDate)}</td></tr>`;
+      lastDate = rowDate;
+    }
     if (row.kind === 'single') {
       const m = row.m;
       const name = getItemName(d, m);
       const c = d.consignees.find(x => x.id === m.consigneeId);
       const qtyClass = m.type === 'in' ? 'qty-in' : m.type === 'out' ? 'qty-out' : 'qty-consign';
-      const qtySign = m.type === 'in' ? '+' : m.type === 'out' ? '-' : '';
       const sub = [
-        c ? `🤝 ${c.name}` : '',
-        m.notes ? `📝 ${m.notes}` : '',
-        m.userName ? `👤 ${m.userName}` : ''
+        c ? `🤝 ${esc(c.name)}` : '',
+        m.notes ? `📝 ${esc(m.notes)}` : '',
+        m.userName ? `👤 ${esc(m.userName)}` : ''
       ].filter(Boolean).join('　');
-      return `<tr data-movtype="${m.type}">
+      return header + `<tr data-movtype="${m.type}">
         <td class="td-mov-header">
           <div class="td-mov-header-left">
-            <div class="td-mov-date-text">${m.date}　${movBadge(m.type)}</div>
             <div class="td-mov-main-row">
-              <span class="td-mov-item-name">${name}</span>
-              <span class="td-mov-qty ${qtyClass}">${qtySign}${fmt(m.qty,1)} ${m.unit||''}</span>
+              ${movBadge(m.type)}
+              <span class="td-mov-item-name">${esc(name)}</span>
+              <span class="td-mov-qty ${qtyClass}">${movQtySign(m.type)}${fmt(m.qty,1)} ${esc(m.unit)||''}</span>
             </div>
             ${sub ? `<div class="td-mov-sub">${sub}</div>` : ''}
           </div>
@@ -5512,15 +5568,15 @@ function renderMovementsPage() {
       const c = d.consignees.find(x => x.id === first.consigneeId);
       const names = group.map(m => getItemName(d, m));
       const label = names[0] + (names.length > 1 ? ` 他${names.length - 1}件` : '');
-      return `<tr data-movtype="bulk" style="cursor:pointer" onclick="toggleBulkHistory('${row.bulkId}')">
+      return header + `<tr data-movtype="bulk" style="cursor:pointer" onclick="toggleBulkHistory('${row.bulkId}')">
         <td class="td-mov-header">
           <div class="td-mov-header-left">
-            <div class="td-mov-date-text">${first.date}　${movBadge(first.type)}</div>
             <div class="td-mov-main-row">
-              <span class="td-mov-item-name">📦 ${label}</span>
+              ${movBadge(first.type)}
+              <span class="td-mov-item-name">📦 ${esc(label)}</span>
               <span style="font-size:.75rem;color:#ed8936;font-weight:700">${group.length}件まとめて</span>
             </div>
-            ${c ? `<div class="td-mov-sub">🤝 ${c.name}</div>` : ''}
+            ${c ? `<div class="td-mov-sub">🤝 ${esc(c.name)}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="color:#a0aec0;font-size:.8rem" id="bulk-arrow-${row.bulkId}">▼</span>
@@ -5533,11 +5589,10 @@ function renderMovementsPage() {
           <div class="bulk-detail-inner">
             ${group.map(m => {
               const qtyClass = m.type === 'in' ? 'qty-in' : m.type === 'out' ? 'qty-out' : 'qty-consign';
-              const qtySign = m.type === 'in' ? '+' : m.type === 'out' ? '-' : '';
               return `<div class="bulk-detail-row">
                 ${movBadge(m.type)}
-                <span class="bulk-detail-name">${getItemName(d,m)}</span>
-                <span class="td-mov-qty ${qtyClass}">${qtySign}${fmt(m.qty,1)} ${m.unit||''}</span>
+                <span class="bulk-detail-name">${esc(getItemName(d,m))}</span>
+                <span class="td-mov-qty ${qtyClass}">${movQtySign(m.type)}${fmt(m.qty,1)} ${esc(m.unit)||''}</span>
               </div>`;
             }).join('')}
           </div>
@@ -5545,6 +5600,13 @@ function renderMovementsPage() {
       </tr>`;
     }
   }).join('');
+
+  if (totalRows > _movLimit) {
+    html += `<tr class="mov-more-row"><td colspan="7">
+      <button class="btn btn-gray" style="width:100%" onclick="_movLimit += 50; renderMovementsPage()">▼ もっと見る（残り ${totalRows - _movLimit} 件）</button>
+    </td></tr>`;
+  }
+  tbody.innerHTML = html;
 }
 
 function toggleBulkHistory(bulkId) {
