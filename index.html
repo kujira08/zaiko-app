@@ -2680,6 +2680,7 @@ window.qrcode = qrcode;
       #prod-body .td-stock { margin: 6px 0; font-size: 1rem; }
       #prod-body .td-actions { margin-top: 10px; display: flex !important; gap: 8px; flex-wrap: wrap; }
       #prod-body .td-hide-mobile { display: none !important; }
+      #prod-body .prod-extra { display: none !important; } /* スマホでは仕入先・最終入出庫日を省略 */
       .td-meta-mobile { display: block; font-size: .75rem; color: #718096; margin-top: 2px; }
 
       /* ===== 入出庫テーブル → カード ===== */
@@ -3160,12 +3161,33 @@ function _getUrlParam(key) {
   const urlInput   = document.getElementById('gate-gas-url');
   if (savedUrl) urlInput.value = savedUrl;
 
-  // 常にログイン画面を表示（GAS URLも常に表示）
+  if (savedUrl && savedToken) {
+    // URL・パスワード保存済みなら自動ログイン（失敗時はゲートに戻る）
+    document.getElementById('password-gate').style.display = 'none';
+    startApp();
+  } else {
+    document.getElementById('password-gate').style.display = 'flex';
+    document.getElementById('gate-gas-url-section').style.display = 'block';
+    setTimeout(() => document.getElementById('gate-password').focus(), 100);
+  }
+})();
+
+// 自動ログイン失敗時にログイン画面へ戻す
+function showGateAgain(msg) {
+  try { showLoading(false); } catch(e) {}
   document.getElementById('password-gate').style.display = 'flex';
   document.getElementById('gate-gas-url-section').style.display = 'block';
-  // パスワード欄にフォーカス
+  const errorEl = document.getElementById('gate-error');
+  if (msg) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
   setTimeout(() => document.getElementById('gate-password').focus(), 100);
-})();
+}
+
+// ログアウト（設定画面から）
+function logoutApp() {
+  if (!confirm('ログアウトしますか？\n次回からパスワードの入力が必要になります。')) return;
+  localStorage.removeItem('zaiko_gas_token');
+  location.reload();
+}
 
 async function submitPassword() {
   const gasUrlInput = document.getElementById('gate-gas-url');
@@ -3210,8 +3232,15 @@ async function submitPassword() {
 function startApp() {
   // データ読み込み開始
   gasGet('getData').then(r => {
-    if (r.ok) initApp(r.data);
-    else showLoadingError('データ読込エラー: ' + (r.error || '不明'));
+    if (r.ok) {
+      initApp(r.data);
+    } else if (String(r.error || '').indexOf('認証') >= 0 || String(r.error || '').indexOf('ログイン') >= 0) {
+      // 保存済みパスワードが無効（変更された等）→ ログイン画面へ
+      localStorage.removeItem('zaiko_gas_token');
+      showGateAgain(r.error);
+    } else {
+      showLoadingError('データ読込エラー: ' + (r.error || '不明'));
+    }
   }).catch(e => showLoadingError('接続エラー: ' + e.message));
   gasGet('getUser').then(r => setUser(r.ok ? r.user : {email:'',name:'ユーザー'})).catch(()=>setUser({email:'',name:'ユーザー'}));
 }
@@ -3230,6 +3259,7 @@ function startApp() {
 <header id="app-header">
   <h1>📦 在庫管理アプリ</h1>
   <div style="display:flex;align-items:center;gap:8px">
+    <span id="save-status" style="font-size:.72rem;color:rgba(255,255,255,.9);white-space:nowrap"></span>
     <span id="alert-badge">⚠ 低在庫</span>
     <button onclick="reloadApp()" title="リロード"
       style="background:rgba(255,255,255,0.18);border:none;color:white;width:34px;height:34px;border-radius:50%;font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s"
@@ -3314,6 +3344,10 @@ function startApp() {
         <div class="stat-num" id="stat-low">0</div>
         <div class="stat-label">低在庫アラート</div>
       </div>
+    </div>
+    <div class="card" id="dash-quick-card" style="display:none">
+      <div class="card-title">⚡ 最近使った商品（タップで入出庫）</div>
+      <div id="dash-recent-items" style="display:flex;gap:8px;flex-wrap:wrap"></div>
     </div>
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -3511,6 +3545,14 @@ function startApp() {
   <!-- ========== 設定 ========== -->
   <div class="page" id="page-settings">
     <div class="page-title">⚙️ 設定</div>
+
+    <div class="card">
+      <div class="card-title">🔐 ログイン</div>
+      <div class="settings-section">
+        <p class="form-hint" style="margin-bottom:8px">パスワードは保存済みで、次回から自動でログインします。</p>
+        <button class="btn btn-gray" onclick="logoutApp()">🚪 ログアウト</button>
+      </div>
+    </div>
 
     <div class="card">
       <div class="card-title">💾 バックアップ・データ管理</div>
@@ -4369,15 +4411,19 @@ function startApp() {
       <button class="modal-close" onclick="closeModal('modal-quick-mov')">✕</button>
     </div>
     <div id="quick-item-info" class="calc-box" style="margin-bottom:14px"></div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>数量</label>
-        <input type="number" id="quick-qty" class="big-input" value="1" min="1" step="1" />
+    <div class="form-group">
+      <label>数量</label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button type="button" onclick="stepQuickQty(-1)"
+          style="width:52px;height:52px;border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;font-size:1.5rem;font-weight:700;color:#4a5568;cursor:pointer;flex-shrink:0">−</button>
+        <input type="number" id="quick-qty" class="big-input" value="1" min="1" step="1" style="text-align:center;flex:1" />
+        <button type="button" onclick="stepQuickQty(1)"
+          style="width:52px;height:52px;border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;font-size:1.5rem;font-weight:700;color:#4a5568;cursor:pointer;flex-shrink:0">＋</button>
       </div>
-      <div class="form-group">
-        <label>日付</label>
-        <input type="date" id="quick-date" />
-      </div>
+    </div>
+    <div class="form-group">
+      <label>日付</label>
+      <input type="date" id="quick-date" />
     </div>
     <div class="form-group">
       <label>備考</label>
@@ -4386,6 +4432,12 @@ function startApp() {
     <button class="quick-mov-btn quick-mov-in" onclick="submitQuickMov('in')">📥 入庫する</button>
     <button class="quick-mov-btn quick-mov-out" onclick="submitQuickMov('out')">📤 出庫する</button>
   </div>
+</div>
+
+<!-- 保存失敗バナー -->
+<div id="save-fail-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9000;background:#c53030;color:#fff;padding:10px 14px;font-size:.88rem;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap">
+  <span>⚠️ 保存に失敗しました。データはまだサーバーに届いていません</span>
+  <button onclick="retrySave()" style="background:#fff;color:#c53030;border:none;border-radius:8px;padding:6px 14px;font-weight:700;cursor:pointer;white-space:nowrap">再試行</button>
 </div>
 
 <div id="toast"></div>
@@ -4413,9 +4465,37 @@ function compactForSave(d) {
   return c;
 }
 
+// 保存ステータス表示（ヘッダー）
+var _statusTimer = null;
+function setSaveStatus(state) {
+  var el = document.getElementById('save-status');
+  if (!el) return;
+  if (_statusTimer) { clearTimeout(_statusTimer); _statusTimer = null; }
+  if (state === 'saving') {
+    el.textContent = '💾 保存中…';
+  } else if (state === 'saved') {
+    el.textContent = '✓ 保存済み';
+    _statusTimer = setTimeout(function() { el.textContent = ''; }, 2500);
+  } else {
+    el.textContent = '';
+  }
+}
+
+function showSaveFailBanner(show) {
+  var b = document.getElementById('save-fail-banner');
+  if (b) b.style.display = show ? 'flex' : 'none';
+}
+
+function retrySave() {
+  showSaveFailBanner(false);
+  setSaveStatus('saving');
+  _doSave();
+}
+
 // GASに非同期保存（UIはすぐ更新、保存はバックグラウンド）
 function save(d) {
   _db = d;
+  setSaveStatus('saving');
   // デバウンス: 連続操作時は最後の1回だけ送信
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function() {
@@ -4429,12 +4509,17 @@ function _doSave() {
   gasPost('saveData', { data: jsonStr }).then(function(result) {
     if (result && result.ok === false) {
       console.error('保存エラー(GAS):', result.error);
-      showToastError('❌ 保存失敗: ' + (result.error || '不明なエラー'));
+      setSaveStatus('');
+      showSaveFailBanner(true);
     } else {
       console.log('保存成功:', result && result.size ? result.size + '文字' : '');
+      setSaveStatus('saved');
+      showSaveFailBanner(false);
     }
   }).catch(function(e) {
-    showToastError('❌ 保存失敗: ' + (e.message || String(e)));
+    console.error('保存エラー:', e);
+    setSaveStatus('');
+    showSaveFailBanner(true);
   });
 }
 
@@ -4517,6 +4602,7 @@ function showToastError(msg) {
   setTimeout(() => { t.className = ''; t.style.background = ''; }, 3500);
 }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function today() { return new Date().toISOString().slice(0, 10); }
 function yen(v) { return '¥' + Math.round(v).toLocaleString(); }
 function fmt(v, dec=2) { return Number(v).toLocaleString('ja-JP', { maximumFractionDigits: dec }); }
@@ -4602,10 +4688,35 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
 });
 
 // トースト
+var _toastTimer = null;
 function toast(msg) {
   const t = document.getElementById('toast');
+  if (_toastTimer) clearTimeout(_toastTimer);
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2400);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// 取り消しボタン付きトースト（入出庫記録直後・5秒間）
+function toastWithUndo(msg, movId) {
+  const t = document.getElementById('toast');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  t.innerHTML = esc(msg) +
+    ` <button onclick="undoMovement('${movId}')"
+       style="margin-left:10px;background:#4f7df0;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:.85rem;font-weight:700;cursor:pointer">元に戻す</button>`;
+  t.classList.add('show');
+  _toastTimer = setTimeout(() => { t.classList.remove('show'); t.innerHTML = ''; }, 5000);
+}
+
+function undoMovement(movId) {
+  const d = load();
+  const m = d.movements.find(x => x.id === movId);
+  if (!m) { toast('すでに取り消し済みです'); return; }
+  reverseMovementStock(d, m);
+  d.movements = d.movements.filter(x => x.id !== movId);
+  saveWithLog(d, '入出庫取消', getItemName(d, m), `${m.qty}${m.unit||''} を取り消し`);
+  dispatchPage(currentPage);
+  renderDashboard();
+  toast('↩️ 取り消しました');
 }
 
 // ============================================================
@@ -4632,10 +4743,32 @@ function renderDashboard() {
   const alertList = document.getElementById('dash-alert-list');
   alertList.innerHTML = lowProds.length === 0
     ? '<div class="empty-state"><div class="empty-icon">✅</div><p>低在庫の商品はありません</p></div>'
-    : lowProds.map(p => `<div class="alert-item">
-        <div><div class="alert-name">${p.name}</div><div style="font-size:0.73rem;color:#718096">残り ${p.stock||0}${p.unit} / 最低 ${p.min||5}${p.unit}</div></div>
-        <div class="alert-stock">残り${p.stock||0}${p.unit}</div>
+    : lowProds.map(p => `<div class="alert-item" onclick="openQuickMov('product','${p.id}')" style="cursor:pointer">
+        <div><div class="alert-name">${esc(p.name)}</div><div style="font-size:0.73rem;color:#718096">残り ${p.stock||0}${esc(p.unit)} / 最低 ${p.min||5}${esc(p.unit)}</div></div>
+        <div style="text-align:right"><div class="alert-stock">残り${p.stock||0}${esc(p.unit)}</div><div style="font-size:0.68rem;color:#4f7df0;margin-top:2px">タップで入出庫 ›</div></div>
       </div>`).join('');
+
+  // 最近使った商品チップ（直近の入出庫から重複なしで6件）
+  const recentIds = [];
+  for (let i = d.movements.length - 1; i >= 0 && recentIds.length < 6; i--) {
+    const m = d.movements[i];
+    if (m.cat === 'product' && m.itemId && !recentIds.includes(m.itemId)) recentIds.push(m.itemId);
+  }
+  const quickCard = document.getElementById('dash-quick-card');
+  const quickItems = recentIds
+    .map(id => d.products.find(p => p.id === id))
+    .filter(Boolean);
+  if (quickItems.length === 0) {
+    quickCard.style.display = 'none';
+  } else {
+    quickCard.style.display = '';
+    document.getElementById('dash-recent-items').innerHTML = quickItems.map(p =>
+      `<button onclick="openQuickMov('product','${p.id}')"
+        style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 14px;border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;max-width:160px">
+        <span style="font-size:.85rem;font-weight:600;color:#2d3748;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px">${esc(p.name)}</span>
+        <span style="font-size:.72rem;color:#718096">在庫 ${p.stock||0}${esc(p.unit)||''}</span>
+      </button>`).join('');
+  }
 
   // 最近の入出庫
   const recent = [...d.movements].sort((a,b) => String(b.date||'').localeCompare(String(a.date||''))).slice(0, 10);
@@ -4645,7 +4778,7 @@ function renderDashboard() {
   } else {
     tbody.innerHTML = recent.map(m => {
       const name = getItemName(d, m);
-      return `<tr><td>${m.date}</td><td>${name}</td><td>${movBadge(m.type)}</td><td><strong>${fmt(m.qty,3)} ${m.unit||''}</strong></td></tr>`;
+      return `<tr><td>${m.date||''}</td><td>${esc(name)}</td><td>${movBadge(m.type)}</td><td><strong>${fmt(m.qty,3)} ${esc(m.unit)||''}</strong></td></tr>`;
     }).join('');
   }
 }
@@ -4747,7 +4880,7 @@ function renderProducts() {
       .filter(([, qty]) => qty > 0)
       .map(([cid, qty]) => {
         const cname = (d.consignees.find(c => c.id === cid) || {}).name || '委託先';
-        return `<span style="display:inline-block;font-size:.7rem;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;margin-top:2px;white-space:nowrap">🏪 ${cname}: ${qty}${p.unit}</span>`;
+        return `<span style="display:inline-block;font-size:.7rem;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;margin-top:2px;white-space:nowrap">🏪 ${esc(cname)}: ${qty}${esc(p.unit)}</span>`;
       }).join(' ');
 
     return `<tr style="${zeroStock ? 'opacity:0.45;' : ''}">
@@ -4755,11 +4888,11 @@ function renderProducts() {
         <div style="display:flex;align-items:center;gap:8px">
           ${thumb}
           <div>
-            <div style="font-weight:600">${low?'⚠️ ':''}${p.name}</div>
-            <div style="font-size:.75rem;color:#718096;margin-top:1px">${p.sku||'-'} &nbsp;|&nbsp; 売:${yen(p.sellingPrice||p.price||0)}${p.sellingPrice ? ` 仕:${yen(p.price||0)}` : ''}</div>
-            ${p.supplier ? `<div style="font-size:.72rem;color:#718096">🏭 ${p.supplier}</div>` : ''}
-            ${p.category ? `<span style="display:inline-block;font-size:.7rem;background:#e9d8fd;color:#553c9a;border-radius:4px;padding:1px 6px;margin-top:2px;cursor:pointer" onclick="selectCatFilter('${p.category.replace(/'/g,"\\'")}');renderProducts()">${p.category}</span>` : ''}
-            <div style="font-size:.7rem;color:#a0aec0">📅 ${lastDate || '履歴なし'}</div>
+            <div style="font-weight:600">${low?'⚠️ ':''}${esc(p.name)}</div>
+            <div style="font-size:.75rem;color:#718096;margin-top:1px">${esc(p.sku)||'-'} &nbsp;|&nbsp; 売:${yen(p.sellingPrice||p.price||0)}${p.sellingPrice ? ` 仕:${yen(p.price||0)}` : ''}</div>
+            ${p.supplier ? `<div class="prod-extra" style="font-size:.72rem;color:#718096">🏭 ${esc(p.supplier)}</div>` : ''}
+            ${p.category ? `<span style="display:inline-block;font-size:.7rem;background:#e9d8fd;color:#553c9a;border-radius:4px;padding:1px 6px;margin-top:2px;cursor:pointer" onclick="selectCatFilter('${p.category.replace(/'/g,"\\'")}');renderProducts()">${esc(p.category)}</span>` : ''}
+            <div class="prod-extra" style="font-size:.7rem;color:#a0aec0">📅 ${lastDate || '履歴なし'}</div>
           </div>
         </div>
       </td>
@@ -5149,8 +5282,8 @@ function mvPickerFilter() {
   } else {
     dropdown.innerHTML = items.map(p =>
       `<div class="picker-item" onmousedown="mvPickerSelect('${p.id}','${safeStr(p.name)}',${p.stock||0},'${p.unit||'個'}')">
-        <span class="item-name">${p.name}</span>
-        <span class="item-stock">在庫: ${p.stock||0}${p.unit||'個'}</span>
+        <span class="item-name">${esc(p.name)}</span>
+        <span class="item-stock">在庫: ${p.stock||0}${esc(p.unit)||'個'}</span>
       </div>`
     ).join('');
   }
@@ -5308,7 +5441,7 @@ function saveMovement(e) {
   closeModal('modal-movement');
   renderMovementsPage();
   renderDashboard();
-  toast('入出庫を記録しました');
+  toastWithUndo(`${typeLabel} ${qty}${unit} 記録しました`, mv.id);
   } catch(err) {
     console.error('saveMovementエラー:', err);
     showToastError('記録に失敗しました: ' + err.message);
@@ -7032,11 +7165,17 @@ function openQuickMov(cat, itemId) {
     if (p) { name = p.name; stock = `${p.stock||0}${p.unit}`; unit = p.unit; }
   }
   document.getElementById('quick-item-info').innerHTML =
-    `<strong style="font-size:1rem">${name}</strong><br>現在在庫: ${stock}`;
-  document.getElementById('quick-qty').value = 1;
+    `<strong style="font-size:1rem">${esc(name)}</strong><br>現在在庫: ${esc(stock)}`;
+  // 前回の数量を記憶していれば初期値にする
+  document.getElementById('quick-qty').value = localStorage.getItem('zaiko_last_qty_' + itemId) || 1;
   document.getElementById('quick-date').value = today();
   document.getElementById('quick-notes').value = '';
   openModal('modal-quick-mov');
+}
+
+function stepQuickQty(delta) {
+  const el = document.getElementById('quick-qty');
+  el.value = Math.max(1, (parseFloat(el.value) || 1) + delta);
 }
 
 function submitQuickMov(type) {
@@ -7047,20 +7186,25 @@ function submitQuickMov(type) {
   const notes = document.getElementById('quick-notes').value.trim();
   let unit = '';
 
+  let itemName = quickMovItemId;
   if (quickMovCat === 'product') {
     const i = d.products.findIndex(p => p.id === quickMovItemId);
     if (i >= 0) {
       unit = d.products[i].unit;
+      itemName = d.products[i].name;
       if (type === 'in') d.products[i].stock = (d.products[i].stock||0) + qty;
       if (type === 'out') d.products[i].stock = Math.max(0, (d.products[i].stock||0) - qty);
     }
   }
-  d.movements.push({ id: uid(), cat: quickMovCat, itemId: quickMovItemId, type, qty, unit, consigneeId: null, date, notes });
-  save(d);
+  const quickMovId = uid();
+  d.movements.push({ id: quickMovId, cat: quickMovCat, itemId: quickMovItemId, type, qty, unit, consigneeId: null, date, notes,
+                     userName: localStorage.getItem('zaiko_username') || '' });
+  if (qty) localStorage.setItem('zaiko_last_qty_' + quickMovItemId, qty);
+  saveWithLog(d, type === 'in' ? '入庫' : '出庫', itemName, `${qty}${unit}（クイック）`);
   closeModal('modal-quick-mov');
   dispatchPage(currentPage);
   renderDashboard();
-  toast(type === 'in' ? `📥 入庫 ${qty}${unit} 記録しました` : `📤 出庫 ${qty}${unit} 記録しました`);
+  toastWithUndo(type === 'in' ? `📥 入庫 ${qty}${unit} 記録しました` : `📤 出庫 ${qty}${unit} 記録しました`, quickMovId);
 }
 
 // ============================================================
