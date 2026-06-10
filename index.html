@@ -4419,19 +4419,83 @@ function save(d) {
   // デバウンス: 連続操作時は最後の1回だけ送信
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function() {
-    var jsonStr = JSON.stringify(compactForSave(d));
-    gasPost('saveData', { data: jsonStr }).then(function(result) {
-      if (result && result.ok === false) {
-        console.error('保存エラー(GAS):', result.error);
-        showToastError('❌ 保存失敗: ' + (result.error || '不明なエラー'));
-      } else {
-        console.log('保存成功:', result && result.size ? result.size + '文字' : '');
-      }
-    }).catch(function(e) {
-      showToastError('❌ 保存失敗: ' + (e.message || String(e)));
-    });
+    _saveTimer = null;
+    _doSave();
   }, 300);
 }
+
+function _doSave() {
+  var jsonStr = JSON.stringify(compactForSave(_db));
+  gasPost('saveData', { data: jsonStr }).then(function(result) {
+    if (result && result.ok === false) {
+      console.error('保存エラー(GAS):', result.error);
+      showToastError('❌ 保存失敗: ' + (result.error || '不明なエラー'));
+    } else {
+      console.log('保存成功:', result && result.size ? result.size + '文字' : '');
+    }
+  }).catch(function(e) {
+    showToastError('❌ 保存失敗: ' + (e.message || String(e)));
+  });
+}
+
+// 画面が隠れる直前にデバウンス待ちの保存を即時送信
+// （記録直後にアプリを閉じても保存が飛ばないように）
+function flushPendingSave() {
+  if (!_saveTimer) return;
+  clearTimeout(_saveTimer);
+  _saveTimer = null;
+  try {
+    var body = JSON.stringify({
+      action: 'saveData', token: _gasToken,
+      data: JSON.stringify(compactForSave(_db))
+    });
+    // keepaliveは64KB制限があるため小さいときだけ付ける（大きくても送信自体は試みる）
+    fetch(_gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      redirect: 'follow',
+      keepalive: body.length < 60000,
+      body: body
+    });
+  } catch(e) { console.error('flush保存エラー:', e); }
+}
+
+// サーバーから最新データを再読込（ボットや他端末の更新を取り込む）
+var _lastLoadTime = 0;
+var _reloading = false;
+function reloadFromServer() {
+  if (_reloading || !_db || !_gasUrl || !_gasToken) return;
+  if (_saveTimer) return;                                   // 未送信の変更がある時は上書きしない
+  if (document.querySelector('.modal-overlay.open')) return; // 入力中は邪魔しない
+  _reloading = true;
+  gasGet('getData').then(function(r) {
+    if (!r.ok) return;
+    try {
+      var parsed = JSON.parse(r.data);
+      if (parsed && parsed._error) return;
+      _db = parsed || emptyData();
+      ['products','materials','movements','consignees','inventoryChecks','categories'].forEach(function(k) {
+        if (!_db[k]) _db[k] = [];
+      });
+      _lastLoadTime = Date.now();
+      dispatchPage(currentPage);
+      toast('🔄 最新データに更新しました');
+    } catch(e) {}
+  }).catch(function(e) {
+    console.error('再読込エラー:', e);
+  }).finally(function() { _reloading = false; });
+}
+
+// 画面の表示/非表示で保存フラッシュ＆再読込
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    flushPendingSave();
+  } else if (Date.now() - _lastLoadTime > 60000) {
+    // 1分以上経って戻ってきたら最新データを取り直す
+    reloadFromServer();
+  }
+});
+window.addEventListener('pagehide', flushPendingSave);
 
 // 保存＋操作ログ記録
 function saveWithLog(d, action, target, detail) {
@@ -4574,7 +4638,7 @@ function renderDashboard() {
       </div>`).join('');
 
   // 最近の入出庫
-  const recent = [...d.movements].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10);
+  const recent = [...d.movements].sort((a,b) => String(b.date||'').localeCompare(String(a.date||''))).slice(0, 10);
   const tbody = document.getElementById('dash-recent-body');
   if (recent.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#a0aec0;padding:18px">記録がありません</td></tr>';
@@ -5257,7 +5321,7 @@ function renderMovementsPage() {
   const q = normalizeSearch(document.getElementById('mov-search').value||'');
   const dateFrom = document.getElementById('mov-date-from').value;
   const dateTo   = document.getElementById('mov-date-to').value;
-  let movs = [...d.movements].sort((a,b) => b.date.localeCompare(a.date));
+  let movs = [...d.movements].sort((a,b) => String(b.date||'').localeCompare(String(a.date||'')));
   if (typeFilter) movs = movs.filter(m => m.type === typeFilter);
   if (q) movs = movs.filter(m => normalizeSearch(getItemName(d, m)).includes(q));
   if (dateFrom) movs = movs.filter(m => m.date >= dateFrom);
@@ -6036,7 +6100,7 @@ function cancelInventory(checkId) {
 
 function renderInvHistory() {
   const d = load();
-  const checks = d.inventoryChecks.filter(c => c.status === 'completed').sort((a,b) => b.date.localeCompare(a.date));
+  const checks = d.inventoryChecks.filter(c => c.status === 'completed').sort((a,b) => String(b.date||'').localeCompare(String(a.date||'')));
   const panel = document.getElementById('inv-hist');
   if (checks.length === 0) {
     panel.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>棚卸し履歴がありません</p></div>'; return;
@@ -6105,7 +6169,7 @@ function renderHistory() {
   const q = normalizeSearch(document.getElementById('hist-search').value||'');
   const dateFrom = document.getElementById('hist-date-from').value;
   const dateTo   = document.getElementById('hist-date-to').value;
-  let movs = [...d.movements].sort((a,b) => b.date.localeCompare(a.date));
+  let movs = [...d.movements].sort((a,b) => String(b.date||'').localeCompare(String(a.date||'')));
   if (q) movs = movs.filter(m => {
     const name = normalizeSearch(getItemName(d, m));
     return name.includes(q) || normalizeSearch(m.notes||'').includes(q);
@@ -7749,7 +7813,7 @@ function exportMonthlyReport() {
     if (month > 0 && m !== month) return false;
     return true;
   });
-  movs.sort((a,b) => a.date.localeCompare(b.date));
+  movs.sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')));
 
   const typeMap = {in:'入庫',out:'出庫',consign_out:'委託出庫',consign_return:'委託返却'};
   const catMap = {product:'商品',dye:'染料',fabric:'生地',other:'その他'};
@@ -8054,6 +8118,7 @@ function initApp(jsonStr) {
   } catch(e) {
     _db = emptyData();
   }
+  _lastLoadTime = Date.now();
 
   // UI更新
   renderDashboard();

@@ -194,7 +194,9 @@ function loadAllData() {
 // データ保存（JSON→シート行変換）
 // ============================================================
 function saveAllData(jsonStr) {
+  var lock = LockService.getScriptLock();
   try {
+    lock.waitLock(15000);  // 他の保存処理が終わるまで最大15秒待つ
     var data = JSON.parse(jsonStr);
     var ss = getSpreadsheet();
 
@@ -220,6 +222,8 @@ function saveAllData(jsonStr) {
     return { ok: true };
   } catch(e) {
     return { ok: false, error: e.message };
+  } finally {
+    try { lock.releaseLock(); } catch(e2) {}
   }
 }
 
@@ -829,7 +833,9 @@ function addConsigneesOnce() {
 // MOVEMENTSシートに追記 + PRODUCTSシートの在庫を直接減算
 // ============================================================
 function addConsignmentSales(body) {
+  var lock = LockService.getScriptLock();
   try {
+    lock.waitLock(15000);
     var ss = getSpreadsheet();
     var movSheet  = getSheet(ss, SHEET_MOVEMENTS);
     var prodSheet = getSheet(ss, SHEET_PRODUCTS);
@@ -879,5 +885,7 @@ function addConsignmentSales(body) {
     return { ok: true, count: items.length, results: results };
   } catch(e) {
     return { ok: false, error: e.message };
+  } finally {
+    try { lock.releaseLock(); } catch(e2) {}
   }
 }
