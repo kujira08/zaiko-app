@@ -3416,7 +3416,8 @@ function startApp() {
       </div>
     </div>
     <div class="search-bar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <input type="text" id="prod-search" placeholder="商品名・SKUで検索..." oninput="renderProducts()" style="flex:1;min-width:140px" />
+      <input type="search" id="prod-search" enterkeyhint="search" placeholder="商品名・SKUで検索..." oninput="renderProducts()"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="flex:1;min-width:140px" />
       <select id="prod-sort" onchange="localStorage.setItem('zaiko_sort',this.value);renderProducts()" style="padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.85rem;background:#fff;color:#2d3748;min-width:120px">
         <option value="default">登録順</option>
         <option value="name_asc">名前順（昇順）</option>
@@ -3473,7 +3474,8 @@ function startApp() {
       </div>
     </div>
     <div class="search-bar" style="flex-wrap:wrap;gap:8px;align-items:center">
-      <input type="text" id="mov-search" placeholder="🔍 商品名で検索..." oninput="renderMovementsPage()" style="flex:1;min-width:140px" />
+      <input type="search" id="mov-search" enterkeyhint="search" placeholder="🔍 商品名で検索..." oninput="renderMovementsPage()"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="flex:1;min-width:140px" />
       <select id="mov-type-filter" onchange="renderMovementsPage()" style="min-width:100px">
         <option value="">全種別</option>
         <option value="in">📥 入庫</option>
@@ -3528,7 +3530,8 @@ function startApp() {
   <div class="page" id="page-history">
     <div class="section-header"><h2>🕐 入出庫履歴</h2></div>
     <div class="search-bar" style="flex-wrap:wrap;gap:6px">
-      <input type="text" id="hist-search" placeholder="品名・備考で検索..." oninput="renderHistory()" style="flex:1;min-width:130px" />
+      <input type="search" id="hist-search" enterkeyhint="search" placeholder="品名・備考で検索..." oninput="renderHistory()"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="flex:1;min-width:130px" />
       <input type="date" id="hist-date-from" oninput="renderHistory()" title="開始日" />
       <input type="date" id="hist-date-to" oninput="renderHistory()" title="終了日" />
     </div>
