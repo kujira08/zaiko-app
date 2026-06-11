@@ -3105,6 +3105,9 @@ window.qrcode = qrcode;
     @media (max-width: 768px) {
       input, select, textarea { font-size: 16px !important; }
     }
+
+    /* iOS: ボタン連打時のダブルタップズームを防止 */
+    button, input, select, label, .badge { touch-action: manipulation; }
   </style>
 <script>
 // ============================================================
