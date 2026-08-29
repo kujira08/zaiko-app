@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>経営ダッシュボード - 大川原染色本舗</title>
+
+<!-- ホーム画面アイコン用の入れ物ページ。
+     GASの/execは親ページをGoogleが生成するので apple-touch-icon を差し込めない。
+     そのため apple-touch-icon を持つこのページを噛ませ、中身はiframeでGASを出す。 -->
+<link rel="apple-touch-icon" href="../icons/dashboard-180.png?v=2">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIHJ4PSIyMjQiIGZpbGw9IiMxYTM2NWQiLz48cmVjdCB4PSIxNTAiIHk9IjgxMiIgd2lkdGg9IjcyNCIgaGVpZ2h0PSI0NiIgcng9IjIzIiBmaWxsPSIjZjdmM2U4Ii8+PHJlY3QgeD0iMjEyIiB5PSI1MzYiIHdpZHRoPSIxNjQiIGhlaWdodD0iMjUyIiByeD0iMzQiIGZpbGw9IiNmN2YzZTgiLz48cmVjdCB4PSI0MzAiIHk9IjQwNCIgd2lkdGg9IjE2NCIgaGVpZ2h0PSIzODQiIHJ4PSIzNCIgZmlsbD0iI2Y3ZjNlOCIvPjxyZWN0IHg9IjY0OCIgeT0iMjQ4IiB3aWR0aD0iMTY0IiBoZWlnaHQ9IjU0MCIgcng9IjM0IiBmaWxsPSIjNWFhODdjIi8+PC9zdmc+">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="経営ダッシュボード">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a365d">
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#1a365d; overscroll-behavior:none; }
+  #wrap { position:fixed; inset:0;
+           padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
+  iframe { display:block; width:100%; height:100%; border:0; background:#f0f2f7; }
+  /* iframeが開けなかったときだけ出す逃げ道 */
+  #fallback { display:none; position:fixed; left:0; right:0; bottom:0;
+               padding:14px calc(14px + env(safe-area-inset-left)) calc(14px + env(safe-area-inset-bottom));
+               background:#1a365d; color:#f7f3e8; font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;
+               text-align:center; }
+  #fallback a { color:#e0a83c; font-weight:600; }
+</style>
+</head>
+<body>
+<div id="wrap"><iframe id="app" src="https://script.google.com/macros/s/AKfycby8djq51pJMmeZVE8A175nMWKsE3azxFv8mzz6CeDEocI3i0kMTLyrLql3fcQWZSQajMg/exec?app=dashboard" allow="camera; clipboard-write"
+     referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+<div id="fallback">うまく開けないときは <a href="https://script.google.com/macros/s/AKfycby8djq51pJMmeZVE8A175nMWKsE3azxFv8mzz6CeDEocI3i0kMTLyrLql3fcQWZSQajMg/exec?app=dashboard">Safariで直接開く</a></div>
+<script>
+  var loaded = false;
+  document.getElementById('app').addEventListener('load', function () { loaded = true; });
+  setTimeout(function () {
+    if (!loaded) document.getElementById('fallback').style.display = 'block';
+  }, 8000);
+</script>
+</body>
+</html>

@@ -2458,7 +2458,8 @@ window.qrcode = qrcode;
       transition: color 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
-    .bnav-btn .bnav-icon { font-size: 1.55rem; line-height: 1; }
+    .bnav-btn .bnav-icon { font-size: 1.55rem; line-height: 0; }
+    .bnav-btn .bnav-icon svg { display: block; }
     .bnav-btn.active { color: #4f7df0; }
     .bnav-btn.active .bnav-icon { transform: scale(1.1); }
     .bnav-btn:active { background: #f0f4f8; border-radius: 8px; }
@@ -2513,7 +2514,8 @@ window.qrcode = qrcode;
       -webkit-tap-highlight-color: transparent;
       transition: background 0.15s;
     }
-    .more-item .more-icon { font-size: 1.6rem; }
+    .more-item .more-icon { font-size: 1.6rem; line-height: 0; }
+    .more-item .more-icon svg { display: block; }
     .more-item:active { background: #ebf8ff; color: #2a4a7f; }
     .more-item.active { background: #ebf8ff; color: #2a4a7f; border: 2px solid #bee3f8; }
     .more-divider { height: 1px; background: #f0f4f8; margin: 14px 0 10px; }
@@ -3304,19 +3306,19 @@ function startApp() {
 <!-- ===== ボトムナビゲーション ===== -->
 <div id="bottom-nav">
   <button class="bnav-btn active" data-page="dashboard">
-    <span class="bnav-icon">🏠</span>ホーム
+    <span class="bnav-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.3 10.9 12 3.6l8.7 7.3"/><path d="M5.6 9.8V20a.9.9 0 0 0 .9.9h11a.9.9 0 0 0 .9-.9V9.8"/><path d="M9.7 20.9v-6.1h4.6v6.1"/></svg></span>ホーム
   </button>
   <button class="bnav-btn" data-page="products">
-    <span class="bnav-icon">🏷</span>商品
+    <span class="bnav-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11.1 2.9H4.5a1.6 1.6 0 0 0-1.6 1.6v6.6a1.6 1.6 0 0 0 .47 1.13l7.4 7.4a1.6 1.6 0 0 0 2.26 0l6.6-6.6a1.6 1.6 0 0 0 0-2.26l-7.4-7.4a1.6 1.6 0 0 0-1.13-.47z"/><circle cx="7.6" cy="7.6" r="1.4"/></svg></span>商品
   </button>
   <button class="bnav-btn" data-page="movements">
-    <span class="bnav-icon">📋</span>入出庫
+    <span class="bnav-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="3"/><path d="M8.4 13.6 8.4 7.8m0 0L6.3 9.9m2.1-2.1 2.1 2.1"/><path d="M15.6 10.4v5.8m0 0 2.1-2.1m-2.1 2.1-2.1-2.1"/></svg></span>入出庫
   </button>
   <button class="bnav-btn" data-page="consignment">
-    <span class="bnav-icon">🤝</span>委託先
+    <span class="bnav-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 8.4 5 4.2h14l1.6 4.2"/><path d="M4.6 8.4v11.4a1 1 0 0 0 1 1h12.8a1 1 0 0 0 1-1V8.4"/><path d="M3.4 8.4a2.4 2.4 0 0 0 4.3 1.5 2.4 2.4 0 0 0 4.3 0 2.4 2.4 0 0 0 4.3 0 2.4 2.4 0 0 0 4.3-1.5"/><path d="M9.6 20.8v-5.2h4.8v5.2"/></svg></span>委託先
   </button>
   <button class="bnav-btn" id="more-btn" onclick="openMoreSheet()">
-    <span class="bnav-icon">☰</span>メニュー
+    <span class="bnav-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/></svg></span>メニュー
   </button>
 </div>
 
@@ -3327,23 +3329,23 @@ function startApp() {
   <div class="more-sheet-title">その他のメニュー</div>
   <div class="more-grid">
     <button class="more-item" data-page="materials" onclick="navToPage('materials')">
-      <span class="more-icon">🧵</span>在庫
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.9" y="15.2" width="18.2" height="4.9" rx="2"/><rect x="4.5" y="9.6" width="15" height="4.9" rx="2"/><rect x="6.1" y="4" width="11.8" height="4.9" rx="2"/></svg></span>在庫
     </button>
     <button class="more-item" data-page="history" onclick="navToPage('history')">
-      <span class="more-icon">🕐</span>履歴
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 6.7V12l3.6 2.1"/></svg></span>履歴
     </button>
     <button class="more-item" data-page="oplogs" onclick="navToPage('oplogs')">
-      <span class="more-icon">👤</span>操作ログ
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M4.9 20.6c0-3.9 3.2-6.3 7.1-6.3s7.1 2.4 7.1 6.3"/></svg></span>操作ログ
     </button>
     <button class="more-item" data-page="settings" onclick="navToPage('settings')">
-      <span class="more-icon">⚙️</span>設定
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 7.2h6.2m3.4 0h7.6"/><path d="M3.4 16.8h7.6m3.4 0h6.2"/><circle cx="11.3" cy="7.2" r="2.1"/><circle cx="12.7" cy="16.8" r="2.1"/></svg></span>設定
     </button>
   </div>
   <div class="more-divider"></div>
   <div class="more-sheet-title">棚卸し（年数回）</div>
   <div class="more-grid">
     <button class="more-item" data-page="inventory" onclick="navToPage('inventory')">
-      <span class="more-icon">📊</span>棚卸し
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.6" y="3.6" width="14.8" height="17" rx="2.2"/><path d="M8.8 3.6V2.4h6.4v1.2"/><path d="M9 12.4l2 2 4-4"/></svg></span>棚卸し
     </button>
   </div>
 </div>

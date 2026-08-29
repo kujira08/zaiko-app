@@ -7,6 +7,8 @@
 | ポータル `portal` | 暖簾（のれん）に丸に川 | 金 `#e0a83c` |
 | 在庫管理 `zaiko` | 畳んで積んだ布 | 橙 `#e8853a` |
 | 顧客管理 `kokyaku` | 重なる人影 | 空 `#63b3ed` |
+| 経営ダッシュボード `dashboard` | 右肩上がりの棒グラフ | 緑 `#5aa87c` |
+| 見積もり計算 `quote` | 見積書に円マーク | 金 `#e0a83c` |
 
 共通：地＝藍 `#1a365d` ／ 図＝生成り `#f7f3e8` ／ アクセントは1色だけ ／ **塗りのみ・細線は使わない**（小さくすると消えるため）
 
@@ -21,6 +23,7 @@
 | `{app}-1024-round.png` | 資料・ショートカットアプリなど、自分で角を丸める必要がある場所用 |
 | `src/{app}-square.svg` | 元データ（角丸なし） |
 | `src/{app}-round.svg` | 元データ（角丸あり）。faviconのdata URIはこれを使う |
+| `src/glyphs.py` | **アプリ内の構造アイコン**（線画・`currentColor`で色を継承）。下部ナビ・メニュー・ファイル種別に使う |
 
 ## 作り直しかた
 
@@ -36,5 +39,7 @@ python3 src/gen.py                     # ← SVGを書き出す（色や形は�
 
 - GAS（`在庫管理/GAS連携/Code.gs`）… `APP_ICON_BASE` からこのフォルダのPNGを参照。
   **GASのタブアイコンは `<link>` では変わらない**（中身がiframeのため）。`.setFaviconUrl(URL)` を使う。data URIは不可＝公開URLが要るのでここに置いている。
-- ホーム画面用の入れ物ページ … `../portal/` `../customers/`
+- ホーム画面用の入れ物ページ … `../portal/` `../customers/` `../dashboard/` `../quote/`
+- アプリ内の構造アイコン … 両`index.html`の下部ナビ／メニュー、`customers.html`のファイル種別
+  - ⚠️ ⚠️✅❌ などの**メッセージの絵文字は置き換えない**（色そのものが意味を持つため）
 - GitHub Pages版 在庫管理 … `../index.html`
