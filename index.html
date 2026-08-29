@@ -2339,7 +2339,7 @@ window.qrcode = qrcode;
   <meta name="apple-mobile-web-app-title" content="在庫管理" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#1a365d" />
-  <link rel="apple-touch-icon" href="icons/zaiko-180.png" />
+  <link rel="apple-touch-icon" href="icons/zaiko-180.png?v=2" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIHJ4PSIyMjQiIGZpbGw9IiMxYTM2NWQiLz48cmVjdCB4PSIxNjAiIHk9IjU5NiIgd2lkdGg9IjcwNCIgaGVpZ2h0PSIxNDAiIHJ4PSIzMCIgZmlsbD0iI2Y3ZjNlOCIvPjxyZWN0IHg9IjIwOCIgeT0iNjM0IiB3aWR0aD0iMzQiIGhlaWdodD0iNjQiIHJ4PSIxNyIgZmlsbD0iIzFhMzY1ZCIvPjxyZWN0IHg9IjIwMCIgeT0iNDQwIiB3aWR0aD0iNjI0IiBoZWlnaHQ9IjE0MCIgcng9IjMwIiBmaWxsPSIjZjdmM2U4Ii8+PHJlY3QgeD0iMjQ4IiB5PSI0NzgiIHdpZHRoPSIzNCIgaGVpZ2h0PSI2NCIgcng9IjE3IiBmaWxsPSIjMWEzNjVkIi8+PHJlY3QgeD0iMjQ4IiB5PSIyODQiIHdpZHRoPSI1MjgiIGhlaWdodD0iMTQwIiByeD0iMzAiIGZpbGw9IiNlODg1M2EiLz48cmVjdCB4PSIyOTYiIHk9IjMyMiIgd2lkdGg9IjM0IiBoZWlnaHQ9IjY0IiByeD0iMTciIGZpbGw9IiMxYTM2NWQiLz48L3N2Zz4=" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -8549,7 +8549,7 @@ function reloadApp() {
 // ============================================================
 (function() {
   try {
-    var iconBase = "icons/";
+    var iconBase = "icons/"; var iconV = "?v=2";
     var manifest = {
       name: "在庫管理アプリ",
       short_name: "在庫管理",
@@ -8561,8 +8561,8 @@ function reloadApp() {
       background_color: "#2a4a7f",
       theme_color: "#1a365d",
       icons: [
-        { src: iconBase + "zaiko-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-        { src: iconBase + "zaiko-512.png", sizes: "512x512", type: "image/png", purpose: "any" }
+        { src: iconBase + "zaiko-192.png" + iconV, sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: iconBase + "zaiko-512.png" + iconV, sizes: "512x512", type: "image/png", purpose: "any" }
       ]
     };
     var blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
