@@ -3824,6 +3824,17 @@ function startApp() {
         </div>
       </div>
 
+      <div class="form-row">
+        <div class="form-group">
+          <label>正式名称（請求書どおり）</label>
+          <input type="text" id="m-official" placeholder="例: HN4602R 152cm天竺ソフト晒 丸巻" />
+        </div>
+        <div class="form-group">
+          <label>仕入先</label>
+          <input type="text" id="m-supplier" placeholder="例: 堀商事㈱" />
+        </div>
+      </div>
+
       <!-- 染料専用 -->
       <div id="dye-fields">
         <div class="info-box">🧪 染料はケースの重さ（kg）で在庫を管理します</div>
@@ -5187,6 +5198,8 @@ function openMaterialModal(id) {
   document.getElementById('m-name').value = '';
   document.getElementById('m-sku').value = '';
   document.getElementById('m-notes').value = '';
+  document.getElementById('m-official').value = '';
+  document.getElementById('m-supplier').value = '';
 
   // フィールド表示切り替え
   document.getElementById('dye-fields').style.display = type === '染料' ? '' : 'none';
@@ -5215,6 +5228,8 @@ function openMaterialModal(id) {
     document.getElementById('m-name').value = m.name;
     document.getElementById('m-sku').value = m.sku || '';
     document.getElementById('m-notes').value = m.notes || '';
+    document.getElementById('m-official').value = m.officialName || '';
+    document.getElementById('m-supplier').value = m.supplier || '';
     document.getElementById('m-min-stock').value = m.minStock || 0;
     if (type === '染料') {
       document.getElementById('m-dye-kind').value = m.dyeKind || '反応染料';
@@ -5254,7 +5269,8 @@ function saveMaterial(e) {
   const data = load();
   const id = document.getElementById('mid').value;
   const type = document.getElementById('m-type-hidden').value;
-  let m = { id: id || uid(), type, name: document.getElementById('m-name').value.trim(), sku: document.getElementById('m-sku').value.trim(), notes: document.getElementById('m-notes').value.trim(), minStock: parseFloat(document.getElementById('m-min-stock').value) || 0 };
+  let m = { id: id || uid(), type, name: document.getElementById('m-name').value.trim(), sku: document.getElementById('m-sku').value.trim(), notes: document.getElementById('m-notes').value.trim(), minStock: parseFloat(document.getElementById('m-min-stock').value) || 0,
+            officialName: document.getElementById('m-official').value.trim(), supplier: document.getElementById('m-supplier').value.trim() };
 
   if (type === '染料') {
     m.dyeKind = document.getElementById('m-dye-kind').value;

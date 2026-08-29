@@ -13,8 +13,13 @@ var SHEET_LOGS      = 'LOGS';
 // PRODUCTSシートのカラム順
 var PROD_COLS = ['id','name','sku','unit','stock','min','price','sellingPrice','category','supplier','notes','imageData','imageUrl'];
 // MATERIALSシートのカラム順
+// ⚠️ 読み書きは「列の位置」で行う（sheetToObjects/objectsToSheetはヘッダー名を見ない）。
+//    追加は必ず末尾。途中に挿すと全レコードが列ズレする。
+// 2026-08-07 追加：officialName（請求書どおりの正式名称）・supplier（仕入先）
+//    ⚠️ GAS連携/Code.gs と必ず同じ内容にすること（同じシートを見ているため片方だけだと消える）
 var MAT_COLS  = ['id','name','sku','type','dyeKind','weightKg','tareKg','pricePerKg','minStock',
-                 'diamMm','coreMm','thickMm','pricePerM','stock','unit','price','sellingPrice','notes'];
+                 'diamMm','coreMm','thickMm','pricePerM','stock','unit','price','sellingPrice','notes',
+                 'officialName','supplier'];
 // MOVEMENTSシートのカラム順
 var MOV_COLS  = ['id','cat','itemId','type','qty','unit','consigneeId','date','notes','userName','bulkId'];
 
