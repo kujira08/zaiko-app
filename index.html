@@ -3151,8 +3151,8 @@ function _getUrlParam(key) {
 <!-- ============================================================
      パスワードゲート（GitHub Pages版）
      ============================================================ -->
-<div id="password-gate" style="display:none;position:fixed;inset:0;background:#f7fafc;z-index:10000;align-items:center;justify-content:center;padding:20px">
-  <div style="background:white;border-radius:16px;padding:32px;max-width:360px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+<div id="password-gate" style="display:none;position:fixed;inset:0;background:#1a365d;z-index:10000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;padding:34px 28px;max-width:340px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.28)">
     <div style="text-align:center;margin-bottom:24px">
       <div style="line-height:0;margin-bottom:14px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="76" height="76"><rect width="1024" height="1024" rx="224" fill="#1a365d"/><rect x="160" y="596" width="704" height="140" rx="30" fill="#f7f3e8"/><rect x="208" y="634" width="34" height="64" rx="17" fill="#1a365d"/><rect x="200" y="440" width="624" height="140" rx="30" fill="#f7f3e8"/><rect x="248" y="478" width="34" height="64" rx="17" fill="#1a365d"/><rect x="248" y="284" width="528" height="140" rx="30" fill="#e8853a"/><rect x="296" y="322" width="34" height="64" rx="17" fill="#1a365d"/></svg></div>
       <h1 style="font-size:1.3rem;font-weight:700;color:#1a365d;margin:0 0 4px">在庫管理アプリ</h1>
@@ -3161,19 +3161,19 @@ function _getUrlParam(key) {
     <div id="gate-gas-url-section" style="margin-bottom:16px">
       <label style="font-size:0.8rem;color:#4a5568;font-weight:600">GAS URL</label>
       <input type="url" id="gate-gas-url" placeholder="https://script.google.com/macros/s/.../exec"
-        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.85rem;margin-top:4px;color:#2d3748"
+        style="width:100%;box-sizing:border-box;padding:12px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:0.85rem;margin-top:4px;color:#2d3748;outline:none"
         value="" />
       <p style="font-size:0.72rem;color:#a0aec0;margin:4px 0 0">初回のみ入力。次回以降は自動で保存されます</p>
     </div>
     <div style="margin-bottom:20px">
       <label style="font-size:0.8rem;color:#4a5568;font-weight:600">パスワード</label>
       <input type="password" id="gate-password" placeholder="パスワードを入力"
-        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:1rem;margin-top:4px"
+        style="width:100%;box-sizing:border-box;padding:12px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:1rem;margin-top:4px;text-align:center;letter-spacing:.15em;outline:none"
         onkeydown="if(event.key==='Enter')submitPassword()" />
     </div>
     <div id="gate-error" style="display:none;background:#fff5f5;border:1px solid #fc8181;border-radius:8px;padding:10px;margin-bottom:14px;font-size:0.85rem;color:#c53030;text-align:center"></div>
     <button onclick="submitPassword()"
-      style="width:100%;padding:14px;background:#1a365d;color:white;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer">
+      style="width:100%;padding:13px;background:#2a4a7f;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer">
       ログイン
     </button>
   </div>
@@ -3346,6 +3346,13 @@ function startApp() {
   <div class="more-grid">
     <button class="more-item" data-page="inventory" onclick="navToPage('inventory')">
       <span class="more-icon"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.6" y="3.6" width="14.8" height="17" rx="2.2"/><path d="M8.8 3.6V2.4h6.4v1.2"/><path d="M9 12.4l2 2 4-4"/></svg></span>棚卸し
+    </button>
+  </div>
+  <div class="more-divider"></div>
+  <div class="more-sheet-title">アプリ</div>
+  <div class="more-grid">
+    <button class="more-item" onclick="forceUpdateApp()">
+      <span class="more-icon"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d='M20.4 12a8.4 8.4 0 1 1-2.5-6'/><path d='M20.6 4.2v5.4h-5.4'/></svg></span>アプリを更新
     </button>
   </div>
 </div>
@@ -8578,8 +8585,29 @@ function reloadApp() {
 </script>
 <script>
 // Service Worker登録（PWAキャッシュ自動更新）
+// 「アプリを更新」ボタン：SWを解除しキャッシュを全部消して読み直す。
+// ホーム画面から追加し直さなくてもこれで最新になる。
+async function forceUpdateApp() {
+  if (!confirm('アプリを最新版に更新します。よろしいですか？')) return;
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch (e) { /* 消せなくても読み直しは試す */ }
+  location.replace(location.pathname + '?_=' + Date.now());
+}
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/zaiko-app/sw.js').then((reg) => {
+    // アプリを前面に出すたびに更新を確認する（ホーム画面アプリは再読込されないため）
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') reg.update();
+    });
     // 新しいバージョンがあれば即座に適用
     reg.addEventListener('updatefound', () => {
       const newWorker = reg.installing;
