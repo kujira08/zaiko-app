@@ -1,7 +1,7 @@
 // Service Worker - 常に最新版を取得する設定
 // ⚠️ 画面の中身を変えたのに反映されないときは、ここの数字を上げる。
 //    ファイルが変われば新しいSWが入り、activateで古いキャッシュを全部消す。
-const CACHE_NAME = 'zaiko-v3';  // 2026-08-30 ログイン画面の統一＋「アプリを更新」ボタン追加
+const CACHE_NAME = 'zaiko-v4';  // 2026-09-03 入れ物ページをキャッシュ対象外に
 
 // インストール時：キャッシュしない（常にネットワークから取得）
 self.addEventListener('install', (e) => {
@@ -21,6 +21,11 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   // GAS APIはキャッシュしない
   if (e.request.url.includes('script.google.com')) return;
+
+  // ホーム画面アイコン用の入れ物ページもキャッシュしない。
+  // ここをキャッシュすると、入れ物を直したときに古いまま残り、
+  // 更新ボタンを持たないぶん直す手段がなくなる。
+  if (/\/zaiko-app\/(portal|customers|dashboard|quote)\//.test(e.request.url)) return;
 
   e.respondWith(
     fetch(e.request)

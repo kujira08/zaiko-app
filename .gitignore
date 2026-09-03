@@ -1,0 +1,11 @@
+# clasp（ローカル専用・スクリプトIDを含む）
+.clasp.json
+.claspignore
+appsscript.json
+
+# 手順書（パスワードの例やデプロイIDを含むので公開しない）
+セットアップ手順.md
+
+# 作業用
+.DS_Store
+icons/_t.html
