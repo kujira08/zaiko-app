@@ -1,5 +1,6 @@
 # clasp（ローカル専用・スクリプトIDを含む）
 .clasp.json
+.clasp.json.disabled
 .claspignore
 appsscript.json
 
@@ -9,3 +10,7 @@ appsscript.json
 # 作業用
 .DS_Store
 icons/_t.html
+
+# 2つ目のGASスクリプト（1gsSFT...）用。Pages版は使っていない。
+# 公開すると API の作りが全部読めるので追跡しない。
+Code.gs
