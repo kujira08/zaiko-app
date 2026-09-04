@@ -3115,10 +3115,13 @@ window.qrcode = qrcode;
 // GAS REST API クライアント（GitHub Pages版）
 // ============================================================
 const _GAS_CONFIG_KEY = 'zaiko_gas_url';
-const _GAS_TOKEN_KEY  = 'zaiko_gas_token';
+const _GAS_TOKEN_KEY  = 'zaiko_gas_token';    // 旧方式＝生パスワードそのもの
+// セッション＝ログイン時にサーバーが発行する使い捨ての鍵。
+// 生パスワードをURLやlocalStorageに置かないためにこちらを使う。
+const _GAS_SESSION_KEY = 'zaiko_gas_session';
 
 let _gasUrl   = localStorage.getItem(_GAS_CONFIG_KEY) || '';
-let _gasToken = localStorage.getItem(_GAS_TOKEN_KEY)  || '';
+let _gasToken = localStorage.getItem(_GAS_SESSION_KEY) || localStorage.getItem(_GAS_TOKEN_KEY) || '';
 
 async function gasGet(action, params) {
   if (!_gasUrl) throw new Error('GAS URLが設定されていません');
@@ -3184,15 +3187,33 @@ function _getUrlParam(key) {
 // パスワードゲート制御
 // ============================================================
 (function() {
-  const savedUrl   = localStorage.getItem('zaiko_gas_url')   || '';
-  const savedToken = localStorage.getItem('zaiko_gas_token') || '';
-  const urlInput   = document.getElementById('gate-gas-url');
+  const savedUrl     = localStorage.getItem(_GAS_CONFIG_KEY)  || '';
+  const savedSession = localStorage.getItem(_GAS_SESSION_KEY) || '';
+  const legacyToken  = localStorage.getItem(_GAS_TOKEN_KEY)   || '';
+  const urlInput     = document.getElementById('gate-gas-url');
   if (savedUrl) urlInput.value = savedUrl;
 
-  if (savedUrl && savedToken) {
-    // URL・パスワード保存済みなら自動ログイン（失敗時はゲートに戻る）
+  if (savedUrl && savedSession) {
     document.getElementById('password-gate').style.display = 'none';
     startApp();
+  } else if (savedUrl && legacyToken) {
+    // 移行：保存されている生パスワードをセッションに交換し、パスワードは消す。
+    // 交換に失敗しても従来どおり生パスワードで動かす（ログアウトさせない）。
+    document.getElementById('password-gate').style.display = 'none';
+    (async () => {
+      try {
+        const u = new URL(savedUrl);
+        u.searchParams.set('action', 'auth');
+        u.searchParams.set('password', legacyToken);
+        const d = await (await fetch(u.toString(), { redirect: 'follow' })).json();
+        if (d && d.ok && d.session) {
+          localStorage.setItem(_GAS_SESSION_KEY, d.session);
+          localStorage.removeItem(_GAS_TOKEN_KEY);
+          _gasToken = d.session;
+        }
+      } catch (e) {}
+      startApp();
+    })();
   } else {
     document.getElementById('password-gate').style.display = 'flex';
     document.getElementById('gate-gas-url-section').style.display = 'block';
@@ -3230,7 +3251,8 @@ async function submitPassword() {
 
   // GAS URLを保存（常に最新の入力値で上書き）
   localStorage.setItem('zaiko_gas_url', url);
-  localStorage.removeItem('zaiko_gas_token'); // 古いトークンをクリア
+  localStorage.removeItem(_GAS_TOKEN_KEY);    // 古い生パスワードをクリア
+  localStorage.removeItem(_GAS_SESSION_KEY);  // 前のセッションもクリア
   _gasUrl = url;
 
   try {
@@ -3240,9 +3262,15 @@ async function submitPassword() {
     const res = await fetch(authUrl.toString(), { redirect: 'follow' });
     const data = await res.json();
     if (data.ok) {
-      // パスワード自体をトークンとして保存
-      localStorage.setItem('zaiko_gas_token', password);
-      _gasToken = password;
+      // セッションを保存する（生パスワードは保存しない）。
+      // 万一サーバーがセッションを返さないときだけ従来どおりにする。
+      if (data.session) {
+        localStorage.setItem(_GAS_SESSION_KEY, data.session);
+        _gasToken = data.session;
+      } else {
+        localStorage.setItem(_GAS_TOKEN_KEY, password);
+        _gasToken = password;
+      }
       document.getElementById('password-gate').style.display = 'none';
       // アプリ起動
       startApp();

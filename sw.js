@@ -1,7 +1,7 @@
 // Service Worker - 常に最新版を取得する設定
 // ⚠️ 画面の中身を変えたのに反映されないときは、ここの数字を上げる。
 //    ファイルが変われば新しいSWが入り、activateで古いキャッシュを全部消す。
-const CACHE_NAME = 'zaiko-v4';  // 2026-09-03 入れ物ページをキャッシュ対象外に
+const CACHE_NAME = 'zaiko-v5';  // 2026-09-04 セッション認証へ移行
 
 // インストール時：キャッシュしない（常にネットワークから取得）
 self.addEventListener('install', (e) => {
